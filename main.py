@@ -27,6 +27,7 @@ async def makestats(user):
 	userstats["dp"] = random.randrange(1, 9)
 	userstats["ap"] = 10 - userstats["dp"]
 	userstats["stand"] = None
+	userstats["money"] = 20
 
 	stats[id] = userstats
 
@@ -50,18 +51,21 @@ async def stats(ctx, *user):
 	try:
 		stats = stats[str(user.id)]
 
-		embed = discord.Embed(title=f"stats for {user.display_name}", colour=discord.Colour(0x16eb4), description=f"health: **{stats['hp']}**\ndefense: **{stats['dp']}**\nattack: **{stats['ap']}**\nstand: **{stats['stand']}**")
+		embed = discord.Embed(title=f"stats for {user.display_name}", colour=discord.Colour(0x16eb4), description=f"health: **{stats['hp']}**\ndefense: **{stats['dp']}**\nattack: **{stats['ap']}**\nstand: **{stats['stand']}**\nmoney: **{stats['money']}**")
 	
 		await ctx.send(embed=embed)
 	except KeyError:
 		await makestats(user)
+		
 		with open("stats.json") as rawstats:
 			stats = json.loads(rawstats.read())
 
 		stats = stats[str(user.id)]
 
-		embed = discord.Embed(title=f"stats for {user.display_name}", colour=discord.Colour(0x16eb4), description=f"health: **{stats['hp']}**\ndefense: **{stats['dp']}**\nattack: **{stats['ap']}**\nstand: **{stats['stand']}**")
+		embed = discord.Embed(title=f"stats for {user.display_name}", colour=discord.Colour(0x16eb4), description=f"health: **{stats['hp']}**\ndefense: **{stats['dp']}**\nattack: **{stats['ap']}**\nstand: **{stats['stand']}**\nmoney: **{stats['money']}**")
 		
 		await ctx.send(embed=embed)
+
+
 
 client.run(token)
