@@ -6,6 +6,8 @@ from discord_slash.utils.manage_components import create_button, create_actionro
 from discord_slash.utils.manage_commands import create_permission
 from discord_slash.model import ButtonStyle, SlashCommandPermissionType
 
+from extra import makestats, addtoinv, changestats, checkmoney, changemoney, getinv, getstats, removefrominv
+
 import random
 import json
 
@@ -20,127 +22,6 @@ async def on_ready():
 
 with open("tokenfile", "r") as tokenfile:
 		token=tokenfile.read()
-
-async def makestats(user):
-
-	id = str(user.id)
-
-	with open("stats.json") as rawstats:
-		stats = json.loads(rawstats.read())
-
-	stats[id] = {}
-	userstats = stats[id]
-
-	userstats["hp"] = 50
-	userstats["dp"] = random.randrange(1, 9)
-	userstats["ap"] = 10 - userstats["dp"]
-	userstats["stand"] = None
-	userstats["money"] = 20
-
-	stats[id] = userstats
-
-	statsfile = open("stats.json", "wt")
-	statsfile.write(json.dumps(stats))
-	statsfile.close()
-
-async def addtoinv(ctx, user, item):
-
-	id = str(user.id)
-
-	with open("inv.json") as rawinv:
-		inv = json.loads(rawinv.read())
-	
-	try:
-		userinv = inv[id]
-		userinv.append(item)
-
-		inv[id] = userinv
-
-		invfile = open("inv.json", "wt")
-		invfile.write(json.dumps(inv))
-		invfile.close()
-	except KeyError:
-		userinv = []
-		userinv.append(item)
-
-		inv[id] = userinv
-
-		invfile = open("inv.json", "wt")
-		invfile.write(json.dumps(inv))
-		invfile.close()
-
-	return True
-async def addtostats(ctx, user, change):
-	
-	id = str(user.id)
-
-	try:
-		with open("stats.json") as rawstats:
-			stats = json.loads(rawstats.read())
-		
-		stats = stats[id]
-
-		for x in stats:
-			stats[x] = change[x]
-	except KeyError:
-		await makestats(user)
-
-		with open("stats.json") as rawstats:
-			stats = json.loads(rawstats.read())
-
-		for x in stats:
-			stats[x] = change[x]
-
-async def checkmoney(user, check):
-	with open("stats.json") as rawstats:
-		stats = json.loads(rawstats.read())
-
-	money = stats[str(user.id)]['money']
-
-	if money >= check:
-		return True
-	elif money <= check:
-		return False
-async def changemoney(user, mod):
-	with open("stats.json") as rawstats:
-		stats = json.loads(rawstats.read())
-
-	money = stats[str(user.id)]['money']
-
-	money += mod
-	print("aaaaaaaaaaaaaAAAAAAAAAAAA")
-
-	stats[str(user.id)]['money'] = money
-
-	statsfile = open("stats.json", "wt")
-	statsfile.write(json.dumps(stats))
-	statsfile.close()
-
-async def getinv(user):
-	try:
-		with open("inv.json") as rawinv:
-			inv = json.loads(rawinv.read())
-		
-			inv = inv[str(user.id)]
-
-			return inv
-	except KeyError:
-		return []
-async def getstats(user):
-	try:
-		with open("stats.json") as rawstats:
-			stats = json.loads(rawstats.read())
-		
-		stats = stats[str(user.id)]
-	except KeyError:
-		await makestats(user)
-		
-		with open("stats.json") as rawstats:
-			stats = json.loads(rawstats.read())
-
-		stats = stats[str(user)]
-
-	return stats
 
 # VVVVVV commands VVVVVV'
 
@@ -252,14 +133,14 @@ async def use(ctx, item):
 
 	if item not in inv:
 		await ctx.send(embed=embedfail, hidden=True)
-#	elif "arrow" in item:
-#		await ctx.send(embed=embedarrow, hidden=True, action_row=action_row2)
-#		button_ctx: ComponentContext = await wait_for_component(client, components=action_row2)
+	#elif "arrow" in item:
+	#	await ctx.send(embed=embedarrow, hidden=True, action_row=action_row2)
+	#	button_ctx: ComponentContext = await wait_for_component(client, components=action_row2)
 
-		## do what ever would happen when you use an arrow ##
+	#	await removefrominv(ctx=ctx, user=ctx.author, item=item)
+
+		# do what ever would happen when you use an arrow #
 	else:
 		await ctx.send(embed=embeduseless, hidden=True)
-
-
 
 client.run(token)
