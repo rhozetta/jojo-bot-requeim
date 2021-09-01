@@ -3,7 +3,8 @@ import discord
 from discord.ext import commands
 from discord_slash import SlashCommand, SlashContext
 from discord_slash.utils.manage_components import create_button, create_actionrow, wait_for_component, ComponentContext
-from discord_slash.model import ButtonStyle
+from discord_slash.utils.manage_commands import create_permission
+from discord_slash.model import ButtonStyle, SlashCommandPermissionType
 
 import random
 import json
@@ -44,14 +45,7 @@ async def makestats(user):
 
 async def addtoinv(ctx, user, item):
 
-	try:
-		user = user.replace("<@!", "")
-		user = user.replace(">", "")
-		user = int(user)
-		user = client.get_user(user)
-		id = str(user.id)
-	except ValueError:
-		return False
+	id = str(user.id)
 
 	with open("inv.json") as rawinv:
 		inv = json.loads(rawinv.read())
@@ -76,6 +70,26 @@ async def addtoinv(ctx, user, item):
 		invfile.close()
 
 	return True
+async def addtostats(ctx, user, change):
+	
+	id = str(user.id)
+
+	try:
+		with open("stats.json") as rawstats:
+			stats = json.loads(rawstats.read())
+		
+		stats = stats[id]
+
+		for x in stats:
+			stats[x] = change[x]
+	except KeyError:
+		await makestats(user)
+
+		with open("stats.json") as rawstats:
+			stats = json.loads(rawstats.read())
+
+		for x in stats:
+			stats[x] = change[x]
 
 async def checkmoney(user, check):
 	with open("stats.json") as rawstats:
@@ -102,22 +116,22 @@ async def changemoney(user, mod):
 	statsfile.write(json.dumps(stats))
 	statsfile.close()
 
-# VVVVVV commands VVVVVV'
-
-@slash.slash(name="stats", guild_ids=[880620607102935091])
-async def stats(ctx):
-
-	with open("stats.json") as rawstats:
-		stats = json.loads(rawstats.read())
-
-	user = ctx.author
-
+async def getinv(user):
 	try:
-		stats = stats[str(user.id)]
+		with open("inv.json") as rawinv:
+			inv = json.loads(rawinv.read())
+		
+			inv = inv[str(user.id)]
 
-		embed = discord.Embed(title=f"stats for {user.display_name}", colour=discord.Colour(0x16eb4), description=f"health: **{stats['hp']}**\ndefense: **{stats['dp']}**\nattack: **{stats['ap']}**\nstand: **{stats['stand']}**\nmoney: **{stats['money']}**")
-	
-		await ctx.send(embed=embed, hidden=True)
+			return inv
+	except KeyError:
+		return []
+async def getstats(user):
+	try:
+		with open("stats.json") as rawstats:
+			stats = json.loads(rawstats.read())
+		
+		stats = stats[str(user.id)]
 	except KeyError:
 		await makestats(user)
 		
@@ -126,11 +140,20 @@ async def stats(ctx):
 
 		stats = stats[str(user)]
 
-		embed = discord.Embed(title=f"stats for {user.display_name}", colour=discord.Colour(0x16eb4), description=f"health: **{stats['hp']}**\ndefense: **{stats['dp']}**\nattack: **{stats['ap']}**\nstand: **{stats['stand']}**\nmoney: **{stats['money']}**")
-		
-		await ctx.send(embed=embed, hidden=True)
+	return stats
 
-@slash.slash(name="job", guild_ids=[880620607102935091])
+# VVVVVV commands VVVVVV'
+
+@slash.slash(guild_ids=[880620607102935091])
+async def stats(ctx):
+
+	stats = await getstats(ctx.author)	
+
+	embed = discord.Embed(title=f"stats for {ctx.author.display_name}", colour=discord.Colour(0x16eb4), description=f"health: **{stats['hp']}**\ndefense: **{stats['dp']}**\nattack: **{stats['ap']}**\nstand: **{stats['stand']}**\nmoney: **{stats['money']}**")
+	
+	await ctx.send(embed=embed, hidden=True)
+
+@slash.slash(guild_ids=[880620607102935091])
 @commands.cooldown(rate=1,per=86400,type=commands.BucketType.user)
 async def job(ctx):
 
@@ -147,8 +170,14 @@ async def job(ctx):
 
 	await ctx.send(embed=embed, hidden=True)
 
-@slash.slash(name="give", guild_ids=[880620607102935091], default_permission=False, permissions={"id": 880620607371345982, "type": 1, "permission": True})
+@slash.slash(guild_ids=[880620607102935091], default_permission=False, permissions={880620607102935091: [create_permission(880620607371345982, SlashCommandPermissionType.ROLE, True)]})
 async def give(ctx, user, item):
+
+	user = user.replace("<@!", "")
+	user = user.replace(">", "")
+	user = int(user)
+	user = client.get_user(user)
+	
 	embedfail = discord.Embed(title=f"give", colour=discord.Colour(0x16eb4), description=f"you need to ping someone")
 	embedsuccess = discord.Embed(title=f"give", colour=discord.Colour(0x16eb4), description=f"you gave {user.display_name} {item}")
 	
@@ -157,32 +186,20 @@ async def give(ctx, user, item):
 	else:
 		await ctx.send(embed=embedfail, hidden=True)
 
-@slash.slash(name="inventory", guild_ids=[880620607102935091])
+@slash.slash(guild_ids=[880620607102935091])
 async def inventory(ctx):
 
-	with open("inv.json") as rawinv:
-		inv = json.loads(rawinv.read())
-
-	user = ctx.author
-
-	try:
-		inv = inv[str(user.id)]
-
-		if inv == []:
-			embed = discord.Embed(title=f"your inventory", colour=discord.Colour(0x16eb4), description=f"your inventory is empty")
-		else:
-			message = ""
-			for x in inv:
-				message += f"**{x}**\n"
-
-			embed = discord.Embed(title=f"your inventory", colour=discord.Colour(0x16eb4), description=message)
-	
-		await ctx.send(embed=embed, hidden=True)
-	except KeyError:
-
+	inv = await getinv(ctx.author)
+	if inv == []:
 		embed = discord.Embed(title=f"your inventory", colour=discord.Colour(0x16eb4), description=f"your inventory is empty")
+	else:
+		message = ""
+		for x in inv:
+			message += f"**{x}**\n"
+
+		embed = discord.Embed(title=f"your inventory", colour=discord.Colour(0x16eb4), description=message)
 		
-		await ctx.send(embed=embed, hidden=True)
+	await ctx.send(embed=embed, hidden=True)
 
 buttons1 = [create_button(style=ButtonStyle.green, label="Yes"), create_button(style=ButtonStyle.blue, label="No")]
 action_row1 = create_actionrow(*buttons1)
@@ -220,6 +237,29 @@ async def search(ctx):
 	else:
 		embed = discord.Embed(title=f"searching", colour=discord.Colour(0x16eb4), description=f"the search was unsuccesful! maybe try again later?")
 		await ctx.send(embed=embed)
+
+buttons2 = [create_button(style=ButtonStyle.green, label="Yes"), create_button(style=ButtonStyle.blue, label="No")]
+action_row2 = create_actionrow(*buttons1)
+
+@slash.slash(guild_ids=[880620607102935091], description="use an item")
+async def use(ctx, item):
+	
+	inv = await getinv(ctx.author)
+
+	embedfail = discord.Embed(title=f"use item", colour=discord.Colour(0x16eb4), description=f"you dont have *{item}*!")
+	embeduseless = discord.Embed(title=f"use item", colour=discord.Colour(0x16eb4), description=f"*{item}* doesnt have a use!")
+	embedarrow = discord.Embed(title=f"use item", colour=discord.Colour(0x16eb4), description=f"do you want to use an arrow? (if you dont just delete this message)")
+
+	if item not in inv:
+		await ctx.send(embed=embedfail, hidden=True)
+#	elif "arrow" in item:
+#		await ctx.send(embed=embedarrow, hidden=True, action_row=action_row2)
+#		button_ctx: ComponentContext = await wait_for_component(client, components=action_row2)
+
+		## do what ever would happen when you use an arrow ##
+	else:
+		await ctx.send(embed=embeduseless, hidden=True)
+
 
 
 client.run(token)
