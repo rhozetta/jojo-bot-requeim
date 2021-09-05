@@ -1,4 +1,5 @@
 from operator import truediv
+from asyncio import sleep
 import discord
 from discord.ext import commands
 from discord_slash import SlashCommand, SlashContext
@@ -12,29 +13,40 @@ import random
 import json
 
 intents = discord.Intents.all()
-client = commands.Bot(command_prefix="j!", intents=intents)
-slash = SlashCommand(client, sync_commands=True)
+client = commands.Bot(intents=intents, command_prefix="eat my nuts")
+slash = SlashCommand(client, sync_commands=True,debug_guild=880620607102935091)
 
+print("Installing wannacry...")
 
 @client.event
 async def on_ready():
-	print("hello world!")
+	for i in range(10):
+		string = "[          ]"
+		print(string.replace(" ","#",i + 1))
+		await sleep(0.2)
+	print("Have fun!!!!!!!")
 
 with open("tokenfile", "r") as tokenfile:
 		token=tokenfile.read()
 
+buttons1 = [create_button(style=ButtonStyle.green, label="Yes"), create_button(style=ButtonStyle.blue, label="No")]
+action_row1 = create_actionrow(*buttons1)
+
+buttons2 = [create_button(style=ButtonStyle.green, label="Yes"), create_button(style=ButtonStyle.blue, label="No")]
+action_row2 = create_actionrow(*buttons1)
+
 # VVVVVV commands VVVVVV'
 
-@slash.slash(guild_ids=[880620607102935091])
+@slash.slash()
 async def stats(ctx):
 
 	stats = await getstats(ctx.author)	
 
-	embed = discord.Embed(title=f"stats for {ctx.author.display_name}", colour=discord.Colour(0x16eb4), description=f"health: **{stats['hp']}**\ndefense: **{stats['dp']}**\nattack: **{stats['ap']}**\nstand: **{stats['stand']}**\nmoney: **{stats['money']}**")
+	embed = discord.Embed(title=f"stats for {ctx.author.display_name}", colour=discord.Colour(0x16eb4), description=f"health: **{stats['hp']}/{stats['max hp']}**\ndefense: **{stats['dp']}**\nattack: **{stats['ap']}**\nstand: **{stats['stand']}**\nmoney: **{stats['money']}**")
 	
 	await ctx.send(embed=embed, hidden=True)
 
-@slash.slash(guild_ids=[880620607102935091])
+@slash.slash()
 @commands.cooldown(rate=1,per=86400,type=commands.BucketType.user)
 async def job(ctx):
 
@@ -51,14 +63,9 @@ async def job(ctx):
 
 	await ctx.send(embed=embed, hidden=True)
 
-@slash.slash(guild_ids=[880620607102935091], default_permission=False, permissions={880620607102935091: [create_permission(880620607371345982, SlashCommandPermissionType.ROLE, True)]})
-async def give(ctx, user, item):
+@slash.slash(default_permission=False, permissions={880620607102935091: [create_permission(880620607371345982, SlashCommandPermissionType.ROLE, True)]})
+async def give(ctx, user:discord.Member, item):
 
-	user = user.replace("<@!", "")
-	user = user.replace(">", "")
-	user = int(user)
-	user = client.get_user(user)
-	
 	embedfail = discord.Embed(title=f"give", colour=discord.Colour(0x16eb4), description=f"you need to ping someone")
 	embedsuccess = discord.Embed(title=f"give", colour=discord.Colour(0x16eb4), description=f"you gave {user.display_name} {item}")
 	
@@ -67,7 +74,7 @@ async def give(ctx, user, item):
 	else:
 		await ctx.send(embed=embedfail, hidden=True)
 
-@slash.slash(guild_ids=[880620607102935091])
+@slash.slash()
 async def inventory(ctx):
 
 	inv = await getinv(ctx.author)
@@ -82,16 +89,13 @@ async def inventory(ctx):
 		
 	await ctx.send(embed=embed, hidden=True)
 
-buttons1 = [create_button(style=ButtonStyle.green, label="Yes"), create_button(style=ButtonStyle.blue, label="No")]
-action_row1 = create_actionrow(*buttons1)
-
-#@slash.slash(name="search", description="look for someone that is selling stand arrows", guild_ids=[880620607102935091])
+@slash.slash(name="search", description="look for someone that is selling stand arrows")
 async def search(ctx):
 	if random.randrange(1, 100) > 90:
 		
 		cost = random.randrange(10, 20) * 100
 
-		embed = discord.Embed(title=f"searching", colour=discord.Colour(0x16eb4), description=f"the search was succesful! would you like to buy a stand arrow for {cost}? the seller is very impatient.")
+		embed = discord.Embed(title=f"searching", colour=discord.Color(0x16eb4), description=f"the search was succesful! would you like to buy a stand arrow for {cost}? the seller is very impatient.")
 		embedpurchase = discord.Embed(title=f"searching", colour=discord.Colour(0x16eb4), description=f"you bought an arrow for {cost}!")
 		embedpoor = discord.Embed(title=f"searching", colour=discord.Colour(0x16eb4), description=f"you do not have sufficient funds")
 
@@ -119,10 +123,7 @@ async def search(ctx):
 		embed = discord.Embed(title=f"searching", colour=discord.Colour(0x16eb4), description=f"the search was unsuccesful! maybe try again later?")
 		await ctx.send(embed=embed)
 
-buttons2 = [create_button(style=ButtonStyle.green, label="Yes"), create_button(style=ButtonStyle.blue, label="No")]
-action_row2 = create_actionrow(*buttons1)
-
-@slash.slash(guild_ids=[880620607102935091], description="use an item")
+@slash.slash(description="use an item")
 async def use(ctx, item):
 	
 	inv = await getinv(ctx.author)
@@ -142,5 +143,41 @@ async def use(ctx, item):
 		# do what ever would happen when you use an arrow #
 	else:
 		await ctx.send(embed=embeduseless, hidden=True)
+
+@slash.slash()
+async def stand(ctx):
+	stats = await getstats(ctx.author)
+	embednone = discord.Embed(title=f"stand", colour=discord.Colour(0x16eb4), description=f"you dont have a stand")
+	embednone = discord.Embed(title=f"stand", colour=discord.Colour(0x16eb4), description=f"")
+
+#@slash.slash(description="hamon heal")
+async def heal(ctx, user:discord.Member = None):
+
+	if user is None:
+		stats = await getstats(ctx.author)
+	else:
+		stats = await getstats(user)
+
+
+	if stats["hamon level"] < 2 and ctx.author != user:		
+		await ctx.send("you arent the right level for this", hidden=True)
+	elif stats["hamon level"] >= 2 and ctx.author != user:
+		change = stats
+
+		amountmin = stats["hamon level"] * 3
+		amountmax = stats["hamon level"] * 6
+		amount = random.randrange(amountmin, amountmax)
+
+		change["hp"] += amount
+
+		if change["hp"] > stats["max hp"]:
+			change["hp"] = stats["max hp"]
+
+		await changestats(ctx, user, change)
+
+		await ctx.send(f"healed {user.display_name} for {amount}")
+	elif ctx.author == user or user is None:
+		await ctx.send(f"you healed yourself")
+
 
 client.run(token)
