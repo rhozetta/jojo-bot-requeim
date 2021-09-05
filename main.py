@@ -144,24 +144,33 @@ async def use(ctx, item):
 	else:
 		await ctx.send(embed=embeduseless, hidden=True)
 
-@slash.slash()
+#@slash.slash()
 async def stand(ctx):
 	stats = await getstats(ctx.author)
 	embednone = discord.Embed(title=f"stand", colour=discord.Colour(0x16eb4), description=f"you dont have a stand")
 	embednone = discord.Embed(title=f"stand", colour=discord.Colour(0x16eb4), description=f"")
 
-#@slash.slash(description="hamon heal")
+@slash.slash(description="hamon heal")
 async def heal(ctx, user:discord.Member = None):
+
+	authorstats = await getstats(ctx.author)
 
 	if user is None:
 		stats = await getstats(ctx.author)
+		user = ctx.author
 	else:
 		stats = await getstats(user)
+		print(stats)
 
+	if authorstats["hamon type"] == None:
+		await ctx.send("you dont know hamon!", hidden=True)
+		return
 
-	if stats["hamon level"] < 2 and ctx.author != user:		
+	if authorstats["hamon type"] != "healing":
+		await ctx.send("you dont know the right type of hamon for this!", hidden=True)
+	elif authorstats["hamon level"] < 2 and ctx.author != user:
 		await ctx.send("you arent the right level for this", hidden=True)
-	elif stats["hamon level"] >= 2 and ctx.author != user:
+	elif authorstats["hamon level"] >= 2 and ctx.author != user:
 		change = stats
 
 		amountmin = stats["hamon level"] * 3
@@ -175,9 +184,24 @@ async def heal(ctx, user:discord.Member = None):
 
 		await changestats(ctx, user, change)
 
-		await ctx.send(f"healed {user.display_name} for {amount}")
-	elif ctx.author == user or user is None:
-		await ctx.send(f"you healed yourself")
+		embed = discord.Embed(title=f"healing", colour=discord.Colour(0x16eb4), description=f"healed **{user.display_name}** for **{amount}**")
+		await ctx.send(embed=embed, hidden=True)
+	elif ctx.author == user:
+		change = stats
+
+		amountmin = stats["hamon level"] * 3 + 5
+		amountmax = stats["hamon level"] * 6 + 5
+		amount = random.randrange(amountmin, amountmax)
+
+		change["hp"] += amount
+
+		if change["hp"] > stats["max hp"]:
+			change["hp"] = stats["max hp"]
+
+		await changestats(ctx=ctx, user=ctx.author, change=change)
+
+		embed = discord.Embed(title=f"healing", colour=discord.Colour(0x16eb4), description=f"healed yourseld for **{amount}**")
+		await ctx.send(embed=embed, hidden=True)
 
 
 client.run(token)

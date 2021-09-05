@@ -60,18 +60,32 @@ async def changestats(ctx, user, change):
 		with open("stats.json") as rawstats:
 			stats = json.loads(rawstats.read())
 		
-		stats = stats[id]
+		userstats = stats[id]
 
-		for x in stats:
-			stats[x] = change[x]
+		for x in userstats:
+			userstats[x] = change[x]
+
+		stats[id] = userstats
+
+		with open("stats.json", "wt") as rawstats:
+			rawstats.write(json.dumps(stats))
+
 	except KeyError:
+		print("\n\n\n")
 		await makestats(user)
 
 		with open("stats.json") as rawstats:
-			stats = json.loads(rawstats)
+			stats = json.loads(rawstats.read())
 
-		for x in stats:
-			stats[x] = change[x]
+		userstats = stats[id]
+
+		for x in userstats:
+			userstats[x] = change[x]
+
+		stats[id] = userstats
+
+		with open("stats.json", "wt") as rawstats:
+			rawstats.write(json.dumps(stats))
 
 async def checkmoney(user, check):
 	with open("stats.json") as rawstats:
