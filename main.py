@@ -163,13 +163,13 @@ async def heal(ctx, user:discord.Member = None):
 		print(stats)
 
 	if authorstats["hamon type"] == None:
-		await ctx.send("you dont know hamon!", hidden=True)
+		await ctx.send(embed=discord.Embed(title=f"healing", colour=discord.Colour(0x16eb4), description=f"you dont know hamon!"), hidden=True)
 		return
 
-	if authorstats["hamon type"] != "healing":
-		await ctx.send("you dont know the right type of hamon for this!", hidden=True)
+	if authorstats["hamon type"] != "healing" and ctx.author != user:
+		await ctx.send(embed=discord.Embed(title=f"healing", colour=discord.Colour(0x16eb4), description=f"you dont know the right type of hamon to heal someone else"), hidden=True)
 	elif authorstats["hamon level"] < 2 and ctx.author != user:
-		await ctx.send("you arent the right level for this", hidden=True)
+		await ctx.send(embed=discord.Embed(title=f"healing", colour=discord.Colour(0x16eb4), description=f"you arent a high enough level to heal someone else"), hidden=True)
 	elif authorstats["hamon level"] >= 2 and ctx.author != user:
 		change = stats
 
@@ -189,8 +189,13 @@ async def heal(ctx, user:discord.Member = None):
 	elif ctx.author == user:
 		change = stats
 
-		amountmin = stats["hamon level"] * 3 + 5
-		amountmax = stats["hamon level"] * 6 + 5
+		if stats["hamon type"] == "healing":
+			amountmin = stats["hamon level"] * 3 + stats["hamon level"] * 2
+			amountmax = stats["hamon level"] * 6 + stats["hamon level"] * 3
+		else:
+			amountmin = stats["hamon level"] * 3
+			amountmax = stats["hamon level"] * 6 
+		
 		amount = random.randrange(amountmin, amountmax)
 
 		change["hp"] += amount
@@ -200,7 +205,7 @@ async def heal(ctx, user:discord.Member = None):
 
 		await changestats(ctx=ctx, user=ctx.author, change=change)
 
-		embed = discord.Embed(title=f"healing", colour=discord.Colour(0x16eb4), description=f"healed yourseld for **{amount}**")
+		embed = discord.Embed(title=f"healing", colour=discord.Colour(0x16eb4), description=f"healed yourself for **{amount}**")
 		await ctx.send(embed=embed, hidden=True)
 
 
