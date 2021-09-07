@@ -7,7 +7,8 @@ from discord_slash.utils.manage_components import create_button, create_actionro
 from discord_slash.utils.manage_commands import create_permission
 from discord_slash.model import ButtonStyle, SlashCommandPermissionType
 
-from extra import makestats, addtoinv, changestats, checkmoney, changemoney, getinv, getstats, removefrominv
+from extra import makestats, addtoinv, changestats, checkmoney, changemoney, getinv, getstats, removefrominv, givehamon
+import hamon
 
 import random
 import json
@@ -90,10 +91,11 @@ async def inventory(ctx):
 	await ctx.send(embed=embed, hidden=True)
 
 @slash.slash(name="search", description="look for someone that is selling stand arrows or teaching hamon (good luck)", permissions={880620607102935091: [create_permission(884220480465305600, SlashCommandPermissionType.ROLE, False)]})
+@commands.cooldown(rate=1,per=86400,type=commands.BucketType.user)
 async def search(ctx):
 	chance = random.randrange(1, 100)
 
-	if chance in range(150, 160): # change to 81, 90
+	if chance in range(150, 160): # found an arrow seller # change to 81, 90
 		
 		cost = random.randrange(10, 20) * 100
 
@@ -121,7 +123,7 @@ async def search(ctx):
 				bought = True
 			else:
 				await button_ctx.send(embed=embedpoor, hidden=True)
-	if chance in range(91, 100):
+	if chance in range(91, 100): #found a hamon teacher
 
 		stats = await getstats(ctx.author)
 		if stats['hamon type'] is not None:
@@ -152,14 +154,7 @@ async def search(ctx):
 
 			await button_ctx.send(embed=embedlearning, hidden=True)
 
-			stats = await getstats(button_ctx.author)
-
-			change = stats
-			change["hamon type"] = hamontype
-			change["hamon level"] = 1
-			change["health"] += 15
-
-			await changestats(ctx=ctx, user=button_ctx.author, change=change)
+			await givehamon(ctx=ctx, user=ctx.author, hamontype=hamontype)
 		elif chance > 3: # teacher needs a valuble item, maybe a stand arrow?
 			
 			inv = await getinv(ctx.author)
@@ -173,15 +168,7 @@ async def search(ctx):
 
 			if "stand arrow" in inv:
 				await button_ctx.send(embed=embedlearning, hidden=True)
-
-				stats = await getstats(button_ctx.author)
-
-				change = stats
-				change["hamon type"] = hamontype
-				change["hamon level"] = 1
-				change["health"] += 15
-
-				await changestats(ctx=ctx, user=button_ctx.author, change=change)
+				await givehamon(ctx=ctx, user=ctx.author, hamontype=hamontype)
 			else:
 				await button_ctx.send(embed=embedpoor, hidden=True)
 				return
@@ -193,16 +180,9 @@ async def search(ctx):
 
 			button_ctx: ComponentContext = await wait_for_component(client, components=action_row2)
 
-			await button_ctx.send(embed=embedlearning, hidden=True)
+			await button_ctx.send(ctx=ctx, embed=embedlearning, hidden=True)
 
-			stats = await getstats(button_ctx.author)
-
-			change = stats
-			change["hamon type"] = hamontype
-			change["hamon level"] = 1
-			change["health"] += 15
-
-			await changestats(ctx=ctx, user=button_ctx.author, change=change)
+			await givehamon(user=ctx.author, hamontype=hamontype)
 	else:
 		embed = discord.Embed(title=f"searching", colour=discord.Colour(0x16eb4), description=f"the search was unsuccesful! maybe try again later?")
 		await ctx.send(embed=embed, hidden=True)

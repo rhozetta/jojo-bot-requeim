@@ -12,6 +12,10 @@ from extra import makestats, addtoinv, changestats, checkmoney, changemoney, get
 import random
 import json
 
+intents = discord.Intents.all()
+client = commands.Bot(intents=intents, command_prefix="eat my nuts")
+slash = SlashCommand(client, sync_commands=True,debug_guild=880620607102935091)
+
 @commands.cooldown(rate=1,per=3600,type=commands.BucketType.user)
 @slash.slash(description="hamon heal", permissions={880620607102935091: [create_permission(884220480465305600, SlashCommandPermissionType.ROLE, False)]})
 async def heal(ctx, user:discord.Member = None):

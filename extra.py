@@ -167,3 +167,21 @@ async def removefrominv(ctx, user, item):
 			return True
 	except KeyError:
 		return True
+
+async def givehamon(ctx, user, hamontype):
+	stats = await getstats(user)
+
+	change = stats
+	change["hamon type"] = hamontype
+	if hamontype == "defending":
+		change["dp"] += 15
+	elif hamontype == "attacking":
+		change["ap"] += 15
+	elif hamontype == "healing":
+		change["max hp"] += 15
+		change["hp"] += 15
+	change["hamon level"] = 1
+	change["max hp"] += 15
+	change["hp"] += 15
+
+	await changestats(ctx=ctx, user=user, change=change)
