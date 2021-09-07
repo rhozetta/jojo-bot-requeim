@@ -32,8 +32,8 @@ with open("tokenfile", "r") as tokenfile:
 buttons1 = [create_button(style=ButtonStyle.green, label="Yes"), create_button(style=ButtonStyle.blue, label="No")]
 action_row1 = create_actionrow(*buttons1)
 
-buttons2 = [create_button(style=ButtonStyle.green, label="Yes"), create_button(style=ButtonStyle.blue, label="No")]
-action_row2 = create_actionrow(*buttons1)
+buttons2 = [create_button(style=ButtonStyle.green, label="Yes")]
+action_row2 = create_actionrow(*buttons2)
 
 # VVVVVV commands VVVVVV'
 
@@ -46,7 +46,7 @@ async def stats(ctx):
 	
 	await ctx.send(embed=embed, hidden=True)
 
-@slash.slash()
+@slash.slash(permissions={880620607102935091: [create_permission(884220480465305600, SlashCommandPermissionType.ROLE, False)]})
 @commands.cooldown(rate=1,per=86400,type=commands.BucketType.user)
 async def job(ctx):
 
@@ -89,9 +89,11 @@ async def inventory(ctx):
 		
 	await ctx.send(embed=embed, hidden=True)
 
-@slash.slash(name="search", description="look for someone that is selling stand arrows")
+@slash.slash(name="search", description="look for someone that is selling stand arrows or teaching hamon (good luck)", permissions={880620607102935091: [create_permission(884220480465305600, SlashCommandPermissionType.ROLE, False)]})
 async def search(ctx):
-	if random.randrange(1, 100) > 90:
+	chance = random.randrange(1, 100)
+
+	if chance in range(150, 160): # change to 81, 90
 		
 		cost = random.randrange(10, 20) * 100
 
@@ -119,11 +121,93 @@ async def search(ctx):
 				bought = True
 			else:
 				await button_ctx.send(embed=embedpoor, hidden=True)
+	if chance in range(91, 100):
+
+		stats = await getstats(ctx.author)
+		if stats['hamon type'] is not None:
+			embed = discord.Embed(title=f"searching", colour=discord.Colour(0x16eb4), description=f"you found a hamon teacher but you already know hamon", footer_text="If no, just delete this message")
+			await ctx.send(embed=embed, hidden=True)
+			return
+
+		chance = random.randrange(1, 10)
+
+		typchance = random.randrange(1,3)
+		if typchance == 1:
+			hamontype = "healing"
+		elif typchance == 2:
+			hamontype = "attacking"
+		elif typchance == 3:
+			hamontype = "defending"
+
+		if True: # chance > 7: # teacher takes money as payment
+			
+			cost = random.randrange(3, 7) * 150
+			embed = discord.Embed(title=f"searching", colour=discord.Colour(0x16eb4), description=f"you found a teacher that takes **money** as payment, would you pay **${cost}**?\n\n this teacher teaches {hamontype} hamon", footer_text="If no, just delete this message")
+			embedpoor = discord.Embed(title=f"searching", colour=discord.Colour(0x16eb4), description=f"you do not have sufficient funds")
+			embedlearning = discord.Embed(title=f"searching", colour=discord.Colour(0x16eb4), description=f"you have started to learn hamon")
+
+			await ctx.send(embed=embed, hidden=True, components=[action_row2])
+
+			button_ctx: ComponentContext = await wait_for_component(client, components=action_row2)
+
+			await button_ctx.send(embed=embedlearning, hidden=True)
+
+			stats = await getstats(button_ctx.author)
+
+			change = stats
+			change["hamon type"] = hamontype
+			change["hamon level"] = 1
+			change["health"] += 15
+
+			await changestats(ctx=ctx, user=button_ctx.author, change=change)
+		elif chance > 3: # teacher needs a valuble item, maybe a stand arrow?
+			
+			inv = await getinv(ctx.author)
+
+			embed = discord.Embed(title=f"searching", colour=discord.Colour(0x16eb4), description=f"you found a teacher that takes **a stand arrow** as payment, would you give up an arrow for training?\n\n this teacher teaches {hamontype} hamon", footer_text="If no, just delete this message")
+			embedpoor = discord.Embed(title=f"searching", colour=discord.Colour(0x16eb4), description=f"you do not have an arrow")
+			embedlearning = discord.Embed(title=f"searching", colour=discord.Colour(0x16eb4), description=f"you have started to learn hamon")
+
+			await ctx.send(embed=embed, hidden=True, components=[action_row2])
+			button_ctx: ComponentContext = await wait_for_component(client, components=action_row2)
+
+			if "stand arrow" in inv:
+				await button_ctx.send(embed=embedlearning, hidden=True)
+
+				stats = await getstats(button_ctx.author)
+
+				change = stats
+				change["hamon type"] = hamontype
+				change["hamon level"] = 1
+				change["health"] += 15
+
+				await changestats(ctx=ctx, user=button_ctx.author, change=change)
+			else:
+				await button_ctx.send(embed=embedpoor, hidden=True)
+				return
+		else: # teacher will do it for free
+			embed = discord.Embed(title=f"searching", colour=discord.Colour(0x16eb4), description=f"you found a teacher that you found a teacher that will teach for **free**?\n\n this teacher teaches {hamontype} hamon", footer_text="If no, just delete this message")
+			embedlearning = discord.Embed(title=f"searching", colour=discord.Colour(0x16eb4), description=f"you have started to learn hamon")
+
+			await ctx.send(embed=embed, hidden=True, components=[action_row2])
+
+			button_ctx: ComponentContext = await wait_for_component(client, components=action_row2)
+
+			await button_ctx.send(embed=embedlearning, hidden=True)
+
+			stats = await getstats(button_ctx.author)
+
+			change = stats
+			change["hamon type"] = hamontype
+			change["hamon level"] = 1
+			change["health"] += 15
+
+			await changestats(ctx=ctx, user=button_ctx.author, change=change)
 	else:
 		embed = discord.Embed(title=f"searching", colour=discord.Colour(0x16eb4), description=f"the search was unsuccesful! maybe try again later?")
-		await ctx.send(embed=embed)
+		await ctx.send(embed=embed, hidden=True)
 
-@slash.slash(description="use an item")
+@slash.slash(description="use an item", permissions={880620607102935091: [create_permission(884220480465305600, SlashCommandPermissionType.ROLE, False)]})
 async def use(ctx, item):
 	
 	inv = await getinv(ctx.author)
@@ -144,13 +228,13 @@ async def use(ctx, item):
 	else:
 		await ctx.send(embed=embeduseless, hidden=True)
 
-#@slash.slash()
+#@slash.slash(permissions={880620607102935091: [create_permission(884220480465305600, SlashCommandPermissionType.ROLE, False)]})
 async def stand(ctx):
 	stats = await getstats(ctx.author)
 	embednone = discord.Embed(title=f"stand", colour=discord.Colour(0x16eb4), description=f"you dont have a stand")
 	embednone = discord.Embed(title=f"stand", colour=discord.Colour(0x16eb4), description=f"")
 
-@slash.slash(description="hamon heal")
+@slash.slash(description="hamon heal", permissions={880620607102935091: [create_permission(884220480465305600, SlashCommandPermissionType.ROLE, False)]})
 async def heal(ctx, user:discord.Member = None):
 
 	authorstats = await getstats(ctx.author)
@@ -207,6 +291,5 @@ async def heal(ctx, user:discord.Member = None):
 
 		embed = discord.Embed(title=f"healing", colour=discord.Colour(0x16eb4), description=f"healed yourself for **{amount}**")
 		await ctx.send(embed=embed, hidden=True)
-
 
 client.run(token)
