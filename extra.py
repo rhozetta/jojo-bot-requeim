@@ -4,6 +4,8 @@ import random
 from discord_slash.utils.manage_commands import create_permission
 from discord_slash.model import SlashCommandPermissionType
 
+healingitems = {"cheesecake":15,"coffee":5,"healing potion":50,"chug jug":1000000,"cookies":10,"battery acid":-10,"wonder bread":15}
+
 async def makestats(user):
 
 	id = str(user.id)
@@ -48,7 +50,7 @@ async def addtoinv(ctx, user, item):
 		inv[id] = userinv
 	
 	with open("inv.json","wt") as invfile: 
-		invfile.write(json.dumps(invfile))
+		invfile.write(json.dumps(inv))
 
 	return True
 
@@ -151,8 +153,10 @@ async def removefrominv(ctx, user, item):
 		userinv = inv[id]
 
 		done = False
-		for x in range(0, len(userinv)-1):
+		for x in range(0, len(userinv)):
+			print(x)
 			if userinv[x] == item:
+				print(userinv[x])
 				userinv.pop(x)
 				done = True
 				break

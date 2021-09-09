@@ -3,12 +3,11 @@ from asyncio import sleep
 import discord
 from discord.ext import commands
 from discord_slash import SlashCommand, SlashContext
-from discord_slash.utils.manage_components import create_button, create_actionrow, wait_for_component, ComponentContext
+from discord_slash.utils.manage_components import create_button, create_actionrow, wait_for_component, ComponentContext, create_select_option, create_select
 from discord_slash.utils.manage_commands import create_permission
 from discord_slash.model import ButtonStyle, SlashCommandPermissionType
 
-from extra import makestats, addtoinv, changestats, checkmoney, changemoney, getinv, getstats, removefrominv, givehamon
-from hamon import heal
+from extra import makestats, addtoinv, changestats, checkmoney, changemoney, getinv, getstats, removefrominv, givehamon, healingitems
 
 import random
 import json
@@ -90,7 +89,7 @@ async def inventory(ctx):
 		
 	await ctx.send(embed=embed, hidden=True)
 
-@slash.slash(name="search", description="look for someone that is selling stand arrows or teaching hamon (good luck)", permissions={880620607102935091: [create_permission(884220480465305600, SlashCommandPermissionType.ROLE, False)]})
+@slash.slash(name="search", description="look for someone that is selling stand arrows (cant do that rn) or teaching hamon (good luck)", permissions={880620607102935091: [create_permission(884220480465305600, SlashCommandPermissionType.ROLE, False)]})
 @commands.cooldown(rate=1,per=86400,type=commands.BucketType.user)
 async def search(ctx):
 	chance = random.randrange(1, 100)
@@ -188,25 +187,49 @@ async def search(ctx):
 		await ctx.send(embed=embed, hidden=True)
 
 @slash.slash(description="use an item", permissions={880620607102935091: [create_permission(884220480465305600, SlashCommandPermissionType.ROLE, False)]})
-async def use(ctx, item):
+async def use(ctx):
 	
 	inv = await getinv(ctx.author)
 
-	embedfail = discord.Embed(title=f"use item", colour=discord.Colour(0x16eb4), description=f"you dont have *{item}*!")
-	embeduseless = discord.Embed(title=f"use item", colour=discord.Colour(0x16eb4), description=f"*{item}* doesnt have a use!")
-	embedarrow = discord.Embed(title=f"use item", colour=discord.Colour(0x16eb4), description=f"do you want to use an arrow? (if you dont just delete this message)")
+	embedempty = discord.Embed(title=f"use item", colour=discord.Colour(0x16eb4), description=f"you dont have have any items")
+	embed = discord.Embed(title=f"use item", colour=discord.Colour(0x16eb4), description=f"what item do you want to use?")
 
-	if item not in inv:
-		await ctx.send(embed=embedfail, hidden=True)
-	#elif "arrow" in item:
-	#	await ctx.send(embed=embedarrow, hidden=True, action_row=action_row2)
-	#	button_ctx: ComponentContext = await wait_for_component(client, components=action_row2)
-
-	#	await removefrominv(ctx=ctx, user=ctx.author, item=item)
-
-		# do what ever would happen when you use an arrow #
+	if inv == []:
+		await ctx.send(embed=embedempty, hidden=True)
+		return
 	else:
-		await ctx.send(embed=embeduseless, hidden=True)
+		options = []
+		for x in inv:
+			options.append(create_select_option(x, value=x))
+		select = create_select(options, placeholder="choose and item", min_values=1, max_values=1)
+		selectionrow = create_actionrow(select)
+		await ctx.send(embed=embed, components=[create_actionrow(select)], hidden=True)
+
+		select_ctx: ComponentContext = await wait_for_component(client, components=selectionrow)
+
+		item = select_ctx.selected_options[0]
+
+		embedusless = discord.Embed(title=f"use item", colour=discord.Colour(0x16eb4), description=f"{item} doesnt have a use")
+
+		if item in healingitems:
+
+			stats = await getstats(ctx.author)
+			change = stats
+
+			amount = healingitems[item]
+			change["hp"] += amount
+			
+			if change["hp"] > stats["max hp"]:
+				change["hp"] = stats["max hp"]
+
+			await changestats(ctx=ctx, user=ctx.author, change=change)
+
+			embedused = discord.Embed(title=f"use item", colour=discord.Colour(0x16eb4), description=f"you used {item} and healed for {amount}")
+			await select_ctx.send(embed=embedused, hidden=True)
+		else:
+			await select_ctx.send(embed=embedusless, hidden=True)
+
+		await removefrominv(ctx=ctx, user=ctx.author, item=item)
 
 #@slash.slash(permissions={880620607102935091: [create_permission(884220480465305600, SlashCommandPermissionType.ROLE, False)]})
 async def stand(ctx):
@@ -272,6 +295,5 @@ async def heal(ctx, user:discord.Member = None):
 
 		embed = discord.Embed(title=f"healing", colour=discord.Colour(0x16eb4), description=f"healed yourself for **{amount}**")
 		await ctx.send(embed=embed, hidden=True)
-
 
 client.run(token)
