@@ -4,8 +4,6 @@ import random
 from discord_slash.utils.manage_commands import create_permission
 from discord_slash.model import SlashCommandPermissionType
 
-healingitems = {"cheesecake":15,"coffee":5,"healing potion":50,"chug jug":1000000,"cookies":10,"battery acid":-10,"wonder bread":15}
-
 async def makestats(user):
 
 	id = str(user.id)
@@ -142,6 +140,11 @@ async def getstats(user):
 
 	return stats
 
+async def geteffects(user):
+	with open("effects.json","r") as effectsraw:
+		effects = json.loads(effectsraw.read())
+		return effects[str(user.id)]
+
 async def removefrominv(ctx, user, item):
 
 	id = str(user.id)
@@ -189,3 +192,27 @@ async def givehamon(ctx, user, hamontype):
 	change["hp"] += 15
 
 	await changestats(ctx=ctx, user=user, change=change)
+
+async def wonderbread(ctx, user):
+	# healing from eating the loaf of bread
+	stats = await getstats(user)
+	change = stats
+	change["hp"] += 15
+	if change["hp"] > stats["max hp"]:
+		change["hp"] = stats["max hp"]
+	await changestats(ctx, user, change)
+
+	# get effects
+	possibleEffects = ["luck"]
+	effects = await geteffects(user)
+
+	id = str(user.id)
+	effects[id] = possibleEffects[random.randrange(len(possibleEffects))]
+
+	with open("effects.json","wt") as effectsraw:
+		effectsraw.write(json.dumps(effects))
+
+	await ctx.send("wonder bread :yum:", hidden=True)
+
+healingitems = {"cheesecake":15,"coffee":5,"healing potion":50,"chug jug":1000000,"cookies":10,"battery acid":-10,"nuts":5}
+functionitems = {"wonder bread":wonderbread}

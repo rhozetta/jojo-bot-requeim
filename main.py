@@ -7,7 +7,7 @@ from discord_slash.utils.manage_components import create_button, create_actionro
 from discord_slash.utils.manage_commands import create_permission
 from discord_slash.model import ButtonStyle, SlashCommandPermissionType
 
-from extra import makestats, addtoinv, changestats, checkmoney, changemoney, getinv, getstats, removefrominv, givehamon, healingitems
+from extra import makestats, addtoinv, changestats, checkmoney, changemoney, getinv, getstats, removefrominv, givehamon, healingitems, functionitems
 
 import random
 import json
@@ -211,6 +211,8 @@ async def use(ctx):
 
 		embedusless = discord.Embed(title=f"use item", colour=discord.Colour(0x16eb4), description=f"{item} doesnt have a use")
 
+		used = False
+
 		if item in healingitems:
 
 			stats = await getstats(ctx.author)
@@ -226,10 +228,19 @@ async def use(ctx):
 
 			embedused = discord.Embed(title=f"use item", colour=discord.Colour(0x16eb4), description=f"you used {item} and healed for {amount}")
 			await select_ctx.send(embed=embedused, hidden=True)
-		else:
-			await select_ctx.send(embed=embedusless, hidden=True)
 
-		await removefrominv(ctx=ctx, user=ctx.author, item=item)
+			await removefrominv(ctx=ctx, user=ctx.author, item=item)
+			used = True
+		
+		if item in functionitems:
+			itemfunc = functionitems[item]
+			await itemfunc(ctx=select_ctx, user=ctx.author)
+
+			await removefrominv(ctx=ctx, user=ctx.author, item=item)
+			used = True
+
+		if not used:
+			await select_ctx.send(embed=embedusless, hidden=True)
 
 #@slash.slash(permissions={880620607102935091: [create_permission(884220480465305600, SlashCommandPermissionType.ROLE, False)]})
 async def stand(ctx):
