@@ -92,7 +92,15 @@ async def inventory(ctx):
 @slash.slash(name="search", description="look for someone that is selling stand arrows (cant do that rn) or teaching hamon (good luck)", permissions={880620607102935091: [create_permission(884220480465305600, SlashCommandPermissionType.ROLE, False)]})
 @commands.cooldown(rate=1,per=86400,type=commands.BucketType.user)
 async def search(ctx):
-	chance = random.randrange(1, 100)
+	# look for luck effect
+	with open("effects.json","r") as effectsraw:
+		effects = json.loads(effectsraw.read())
+		effects = effects[str(ctx.author.id)]
+
+	if "luck" in effects:
+		chance = random.randrange(30, 100)
+	else:
+		chance = random.randrange(1, 100)
 
 	if chance in range(150, 160): # found an arrow seller # change to 81, 90
 		
@@ -122,7 +130,7 @@ async def search(ctx):
 				bought = True
 			else:
 				await button_ctx.send(embed=embedpoor, hidden=True)
-	if chance in range(91, 100): #found a hamon teacher
+	elif chance in range(91, 100): #found a hamon teacher
 
 		stats = await getstats(ctx.author)
 		if stats['hamon type'] is not None:
@@ -182,6 +190,10 @@ async def search(ctx):
 			await button_ctx.send(ctx=ctx, embed=embedlearning, hidden=True)
 
 			await givehamon(user=ctx.author, hamontype=hamontype)
+	elif chance in range(30, 60):
+		await addtoinv(ctx=ctx,user=ctx.author.id,item="ground sandwich")
+		embed = discord.Embed(title=f"searching", colour=discord.Color(0x16eb4), description=f"you found a sandwich on the ground")
+		await ctx.send(embed=embed, hidden=True)	
 	else:
 		embed = discord.Embed(title=f"searching", colour=discord.Colour(0x16eb4), description=f"the search was unsuccesful! maybe try again later?")
 		await ctx.send(embed=embed, hidden=True)
@@ -231,7 +243,6 @@ async def use(ctx):
 
 			await removefrominv(ctx=ctx, user=ctx.author, item=item)
 			used = True
-		
 		if item in functionitems:
 			itemfunc = functionitems[item]
 			await itemfunc(ctx=select_ctx, user=ctx.author)

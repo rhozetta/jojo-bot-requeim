@@ -214,5 +214,5 @@ async def wonderbread(ctx, user):
 
 	await ctx.send("wonder bread :yum:", hidden=True)
 
-healingitems = {"cheesecake":15,"coffee":5,"healing potion":50,"chug jug":1000000,"cookies":10,"battery acid":-10,"nuts":5}
+healingitems = {"cheesecake":15,"coffee":5,"healing potion":50,"chug jug":1000000,"cookies":10,"battery acid":-10,"nuts":5,"ground sandwich": 15}
 functionitems = {"wonder bread":wonderbread}
