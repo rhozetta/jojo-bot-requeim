@@ -7,7 +7,7 @@ from discord_slash.utils.manage_components import create_button, create_actionro
 from discord_slash.utils.manage_commands import create_permission
 from discord_slash.model import ButtonStyle, SlashCommandPermissionType
 
-from extra import makestats, addtoinv, changestats, checkmoney, changemoney, getinv, getstats, removefrominv, givehamon, healingitems, functionitems
+from extra import makestats, addtoinv, changestats, checkmoney, changemoney, getinv, getstats, removefrominv, givehamon, healingitems, functionitems, itemcosts
 
 import random
 import json
@@ -74,7 +74,7 @@ async def give(ctx, user:discord.Member, item):
 	else:
 		await ctx.send(embed=embedfail, hidden=True)
 
-@slash.slash()
+@slash.slash(description="view your inventory")
 async def inventory(ctx):
 
 	inv = await getinv(ctx.author)
@@ -88,6 +88,31 @@ async def inventory(ctx):
 		embed = discord.Embed(title=f"your inventory", colour=discord.Colour(0x16eb4), description=message)
 		
 	await ctx.send(embed=embed, hidden=True)
+
+@slash.slash(description="check out your local corner store")
+@commands.cooldown(rate=1,per=360,type=commands.BucketType.guild)
+async def shop(ctx):
+	items = []
+	for x in itemcosts:
+		items.append(x)
+	print(items)
+
+	inshop = []
+	for x in range(-1, random.randrange(len(items))):
+		instock = items[random.randrange(len(items))]
+		if instock in inshop:
+			continue
+		inshop.append(instock)
+
+	options = []
+	for x in inshop:
+		label = f"{x} - ${itemcosts[x]}"
+		options.append(create_select_option(label=label, value=x))
+	select = create_select(options=options, placeholder="come check out our wares!",min_values=1,custom_id="shop")
+	selectionrow = create_actionrow(select)
+
+	embed = discord.Embed(title=f"Dollar General", colour=discord.Colour(0x16eb4), description=f"come check out the random junk we have in stock today")
+	await ctx.send(embed=embed, components=[selectionrow])
 
 @slash.slash(name="search", description="look for someone that is selling stand arrows (cant do that rn) or teaching hamon (good luck)", permissions={880620607102935091: [create_permission(884220480465305600, SlashCommandPermissionType.ROLE, False)]})
 @commands.cooldown(rate=1,per=86400,type=commands.BucketType.user)
@@ -125,7 +150,7 @@ async def search(ctx):
 				else:
 					await button_ctx.origin_message.delete()
 					await button_ctx.send(embed=embedpurchase, hidden=True)
-				await addtoinv(ctx=ctx, user=str(button_ctx.author.id), item="stand arrow")
+				await addtoinv(user=str(button_ctx.author.id), item="stand arrow")
 				await changemoney(user=ctx.author, mod= -cost)
 				bought = True
 			else:
@@ -161,7 +186,7 @@ async def search(ctx):
 
 			await button_ctx.send(embed=embedlearning, hidden=True)
 
-			await givehamon(ctx=ctx, user=ctx.author, hamontype=hamontype)
+			await givehamon(user=ctx.author, hamontype=hamontype)
 		elif chance > 3: # teacher needs a valuble item, maybe a stand arrow?
 			
 			inv = await getinv(ctx.author)
@@ -175,7 +200,7 @@ async def search(ctx):
 
 			if "stand arrow" in inv:
 				await button_ctx.send(embed=embedlearning, hidden=True)
-				await givehamon(ctx=ctx, user=ctx.author, hamontype=hamontype)
+				await givehamon(user=ctx.author, hamontype=hamontype)
 			else:
 				await button_ctx.send(embed=embedpoor, hidden=True)
 				return
@@ -187,11 +212,11 @@ async def search(ctx):
 
 			button_ctx: ComponentContext = await wait_for_component(client, components=action_row2)
 
-			await button_ctx.send(ctx=ctx, embed=embedlearning, hidden=True)
+			await button_ctx.send(embed=embedlearning, hidden=True)
 
 			await givehamon(user=ctx.author, hamontype=hamontype)
 	elif chance in range(30, 60):
-		await addtoinv(ctx=ctx,user=ctx.author.id,item="ground sandwich")
+		await addtoinv(user=ctx.author.id,item="ground sandwich")
 		embed = discord.Embed(title=f"searching", colour=discord.Color(0x16eb4), description=f"you found a sandwich on the ground")
 		await ctx.send(embed=embed, hidden=True)	
 	else:
@@ -212,10 +237,16 @@ async def use(ctx):
 	else:
 		options = []
 		for x in inv:
-			options.append(create_select_option(x, value=x))
+			amount = 0
+			for y in inv:
+				if y == x:
+					amount += 1
+			if create_select_option(f"{x} - {amount}", value=x) in options:
+				continue
+			options.append(create_select_option(f"{x} - {amount}", value=x))
 		select = create_select(options, placeholder="choose and item", min_values=1, max_values=1)
 		selectionrow = create_actionrow(select)
-		await ctx.send(embed=embed, components=[create_actionrow(select)], hidden=True)
+		await ctx.send(embed=embed, components=[selectionrow], hidden=True)
 
 		select_ctx: ComponentContext = await wait_for_component(client, components=selectionrow)
 
@@ -236,28 +267,22 @@ async def use(ctx):
 			if change["hp"] > stats["max hp"]:
 				change["hp"] = stats["max hp"]
 
-			await changestats(ctx=ctx, user=ctx.author, change=change)
+			await changestats(user=ctx.author, change=change)
 
 			embedused = discord.Embed(title=f"use item", colour=discord.Colour(0x16eb4), description=f"you used {item} and healed for {amount}")
 			await select_ctx.send(embed=embedused, hidden=True)
 
-			await removefrominv(ctx=ctx, user=ctx.author, item=item)
+			await removefrominv(user=ctx.author, item=item)
 			used = True
 		if item in functionitems:
 			itemfunc = functionitems[item]
-			await itemfunc(ctx=select_ctx, user=ctx.author)
+			await itemfunc(user=ctx.author)
 
-			await removefrominv(ctx=ctx, user=ctx.author, item=item)
+			await removefrominv(user=ctx.author, item=item)
 			used = True
 
 		if not used:
 			await select_ctx.send(embed=embedusless, hidden=True)
-
-#@slash.slash(permissions={880620607102935091: [create_permission(884220480465305600, SlashCommandPermissionType.ROLE, False)]})
-async def stand(ctx):
-	stats = await getstats(ctx.author)
-	embednone = discord.Embed(title=f"stand", colour=discord.Colour(0x16eb4), description=f"you dont have a stand")
-	embednone = discord.Embed(title=f"stand", colour=discord.Colour(0x16eb4), description=f"")
 
 @slash.slash(description="hamon heal", permissions={880620607102935091: [create_permission(884220480465305600, SlashCommandPermissionType.ROLE, False)]})
 @commands.cooldown(rate=1,per=3600,type=commands.BucketType.user)
@@ -313,9 +338,32 @@ async def heal(ctx, user:discord.Member = None):
 		if change["hp"] > stats["max hp"]:
 			change["hp"] = stats["max hp"]
 
-		await changestats(ctx=ctx, user=ctx.author, change=change)
+		await changestats(user=ctx.author, change=change)
 
 		embed = discord.Embed(title=f"healing", colour=discord.Colour(0x16eb4), description=f"healed yourself for **{amount}**")
 		await ctx.send(embed=embed, hidden=True)
+
+@slash.component_callback(components=["shop"])
+async def shopcallback(ctx):
+	item = ctx.selected_options[0]
+
+	balance = await getstats(ctx.author)
+	balance = balance["money"]
+	cost = itemcosts[item]
+
+	embededit = discord.Embed(title=f"Dollar General", colour=discord.Colour(0x16eb4), description=f"come check out the random junk we have in stock today")
+
+	if balance >= cost:
+		await changemoney(user=ctx.author, mod= -cost)
+		await addtoinv(user=ctx.author, item=item)
+
+		embed = discord.Embed(title=f"Dollar General", colour=discord.Colour(0x16eb4), description=f"you bought 1 {item} for {cost}")
+		await ctx.edit_origin(embed=embededit)
+		await ctx.send(embed=embed, hidden=True)
+	else:
+		embed = discord.Embed(title=f"Dollar General", colour=discord.Colour(0x16eb4), description=f"sorry, but you are too poor for this")
+		await ctx.edit_origin(embed=embededit)
+		await ctx.send(embed=embed, hidden=True)
+
 
 client.run(token)

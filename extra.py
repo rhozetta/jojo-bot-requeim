@@ -28,7 +28,7 @@ async def makestats(user):
 	with open("stats.json", "wt") as rawstats: 
 		rawstats.write(json.dumps(stats))
 
-async def addtoinv(ctx, user, item):
+async def addtoinv(user, item):
 
 	id = str(user.id)
 
@@ -52,7 +52,7 @@ async def addtoinv(ctx, user, item):
 
 	return True
 
-async def changestats(ctx, user, change):
+async def changestats(user, change):
 	
 	id = str(user.id)
 
@@ -145,7 +145,7 @@ async def geteffects(user):
 		effects = json.loads(effectsraw.read())
 		return effects[str(user.id)]
 
-async def removefrominv(ctx, user, item):
+async def removefrominv(user, item):
 
 	id = str(user.id)
 
@@ -175,7 +175,7 @@ async def removefrominv(ctx, user, item):
 	except KeyError:
 		return True
 
-async def givehamon(ctx, user, hamontype):
+async def givehamon(user, hamontype):
 	stats = await getstats(user)
 
 	change = stats
@@ -191,16 +191,16 @@ async def givehamon(ctx, user, hamontype):
 	change["max hp"] += 15
 	change["hp"] += 15
 
-	await changestats(ctx=ctx, user=user, change=change)
+	await changestats(user=user, change=change)
 
-async def wonderbread(ctx, user):
+async def wonderbread(user):
 	# healing from eating the loaf of bread
 	stats = await getstats(user)
 	change = stats
 	change["hp"] += 15
 	if change["hp"] > stats["max hp"]:
 		change["hp"] = stats["max hp"]
-	await changestats(ctx, user, change)
+	await changestats(user, change)
 
 	# get effects
 	possibleEffects = ["luck"]
@@ -214,5 +214,6 @@ async def wonderbread(ctx, user):
 
 	await ctx.send("wonder bread :yum:", hidden=True)
 
-healingitems = {"cheesecake":15,"coffee":5,"healing potion":50,"chug jug":1000000,"cookies":10,"battery acid":-10,"nuts":5,"ground sandwich": 15}
+healingitems = {"cheesecake":15,"coffee":5,"healing potion":50,"chug jug":1000000,"cookies":10,"battery acid":-10,"nuts":5,"ground sandwich": 15,"sandwich":20}
 functionitems = {"wonder bread":wonderbread}
+itemcosts = {"cheesecake":5,"coffee":1,"healing potion":50,"chug jug":200,"cookies":10,"battery acid":1,"nuts":5,"ground sandwich": None,"sandwich":20,"wonder bread":25}
