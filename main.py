@@ -365,5 +365,4 @@ async def shopcallback(ctx):
 		await ctx.edit_origin(embed=embededit)
 		await ctx.send(embed=embed, hidden=True)
 
-
 client.run(token)
