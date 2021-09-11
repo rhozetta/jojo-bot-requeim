@@ -269,45 +269,13 @@ async def use(ctx):
 			if create_select_option(f"{x} - {amount}", value=x) in options:
 				continue
 			options.append(create_select_option(f"{x} - {amount}", value=x))
-		select = create_select(options, placeholder="choose and item", min_values=1, max_values=1)
+		select = create_select(options, placeholder="choose and item", min_values=1,custom_id="use")
 		selectionrow = create_actionrow(select)
 		await ctx.send(embed=embed, components=[selectionrow], hidden=True)
 
 		select_ctx: ComponentContext = await wait_for_component(client, components=selectionrow)
 
-		item = select_ctx.selected_options[0]
-
-		embedusless = discord.Embed(title=f"use item", colour=discord.Colour(0x16eb4), description=f"{item} doesnt have a use")
-
-		used = False
-
-		if item in healingitems:
-
-			stats = await getstats(ctx.author)
-			change = stats
-
-			amount = healingitems[item]
-			change["hp"] += amount
-			
-			if change["hp"] > stats["max hp"]:
-				change["hp"] = stats["max hp"]
-
-			await changestats(user=ctx.author, change=change)
-
-			embedused = discord.Embed(title=f"use item", colour=discord.Colour(0x16eb4), description=f"you used {item} and healed for {amount}")
-			await select_ctx.send(embed=embedused, hidden=True)
-
-			await removefrominv(user=ctx.author, item=item)
-			used = True
-		if item in functionitems:
-			itemfunc = functionitems[item]
-			await itemfunc(user=ctx.author)
-
-			await removefrominv(user=ctx.author, item=item)
-			used = True
-
-		if not used:
-			await select_ctx.send(embed=embedusless, hidden=True)
+		
 
 @slash.slash(description="hamon heal", permissions={880620607102935091: [create_permission(884220480465305600, SlashCommandPermissionType.ROLE, False)]})
 @commands.cooldown(rate=1,per=3600,type=commands.BucketType.user)
@@ -368,9 +336,6 @@ async def heal(ctx, user:discord.Member = None):
 		embed = discord.Embed(title=f"healing", colour=discord.Colour(0x16eb4), description=f"healed yourself for **{amount}**")
 		await ctx.send(embed=embed, hidden=True)
 
-
-
-
 @slash.component_callback(components=["shop"])
 async def shopcallback(ctx):
 	item = ctx.selected_options[0]
@@ -395,5 +360,40 @@ async def shopcallback(ctx):
 
 @slash.component_callback(components=["use"])
 async def usecallback(ctx):
+	item = ctx.selected_options[0]
+
+	embededit = discord.Embed(title=f"use item", colour=discord.Colour(0x16eb4), description=f"what item do you want to use?")
+	embedusless = discord.Embed(title=f"use item", colour=discord.Colour(0x16eb4), description=f"{item} doesnt have a use")
+
+	used = False
+
+	if item in healingitems:
+
+		stats = await getstats(ctx.author)
+		change = stats
+
+		amount = healingitems[item]
+		change["hp"] += amount
+			
+		if change["hp"] > stats["max hp"]:
+			change["hp"] = stats["max hp"]
+
+		await changestats(user=ctx.author, change=change)
+
+		embedused = discord.Embed(title=f"use item", colour=discord.Colour(0x16eb4), description=f"you used {item} and healed for {amount}")
+		await ctx.edit_origin(embed=embededit, hidden=True)
+		await ctx.send(embed=embedused, hidden=True)
+
+		await removefrominv(user=ctx.author, item=item)
+		used = True
+	if item in functionitems:
+		itemfunc = functionitems[item]
+		await itemfunc(ctx=ctx,user=ctx.author,embededit=embededit)
+
+		await removefrominv(user=ctx.author, item=item)
+		used = True
+	if not used:
+		await ctx.edit_origin(embed=embededit, hidden=True)
+		await ctx.send(embed=embedusless, hidden=True)
 
 client.run(token)

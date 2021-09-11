@@ -105,7 +105,6 @@ async def changemoney(user, mod):
 	money = stats[str(user.id)]['money']
 
 	money += mod
-	print("aaaaaaaaaaaaaAAAAAAAAAAAA")
 
 	stats[str(user.id)]['money'] = money
 
@@ -193,7 +192,7 @@ async def givehamon(user, hamontype):
 
 	await changestats(user=user, change=change)
 
-async def wonderbread(user):
+async def wonderbread(ctx, user):
 	# healing from eating the loaf of bread
 	stats = await getstats(user)
 	change = stats
@@ -212,6 +211,7 @@ async def wonderbread(user):
 	with open("effects.json","wt") as effectsraw:
 		effectsraw.write(json.dumps(effects))
 
+	await ctx.edit_origin(embed=embededit, hidden=True)
 	await ctx.send("wonder bread :yum:", hidden=True)
 
 healingitems = {"cheesecake":15,"coffee":5,"healing potion":50,"chug jug":1000000,"cookies":10,"battery acid":-10,"nuts":5,"ground sandwich": 15,"sandwich":20}
