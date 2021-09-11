@@ -207,7 +207,7 @@ async def wonderbread(user):
 	effects = await geteffects(user)
 
 	id = str(user.id)
-	effects[id] = possibleEffects[random.randrange(len(possibleEffects))]
+	effects[id].append(possibleEffects[random.randrange(len(possibleEffects))])
 
 	with open("effects.json","wt") as effectsraw:
 		effectsraw.write(json.dumps(effects))

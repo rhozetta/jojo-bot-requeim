@@ -133,16 +133,27 @@ async def shop(ctx):
 async def search(ctx):
 	# look for luck effect
 	with open("effects.json","r") as effectsraw:
-		effects = json.loads(effectsraw.read())
+		alleffects = json.loads(effectsraw.read())
+		print(alleffects)
 		try:
-			effects = effects[str(ctx.author.id)]
+			effects = alleffects[str(ctx.author.id)]
+			print(effects)
 		except KeyError:
 			effects = []
 
 	if "luck" in effects:
 		chance = random.randrange(30, 100)
+		for x in range(len(effects)):
+			if effects[x] == "luck":
+				print("found the effect")
+				effects.pop(x)
+				break
 	else:
 		chance = random.randrange(1, 100)
+
+	with open("effects.json","wt") as effectsraw:
+		alleffects[str(ctx.author.id)] = effects
+		effectsraw.write(json.dumps(alleffects))
 
 	if chance in range(150, 160): # found an arrow seller # change to 81, 90
 		
