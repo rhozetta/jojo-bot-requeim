@@ -7,7 +7,7 @@ from discord_slash.utils.manage_components import create_button, create_actionro
 from discord_slash.utils.manage_commands import create_permission
 from discord_slash.model import ButtonStyle, SlashCommandPermissionType
 
-from extra import makestats, addtoinv, changestats, checkmoney, changemoney, getinv, getstats, removefrominv, givehamon, healingitems, functionitems, itemcosts
+from extra import makestats, addtoinv, changestats, checkmoney, changemoney, getinv, getstats, removefrominv, givehamon, healingitems, functionitems, itemcosts, combatitems
 
 import random
 import json

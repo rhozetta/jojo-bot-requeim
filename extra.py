@@ -52,6 +52,15 @@ async def addtoinv(user, item):
 
 	return True
 
+async def giveeffect(user, effect):
+	effects = await geteffects(user)
+	id = str(user.id)
+
+	effects[id].append(effect)
+
+	with open("effects.json","wt") as effectsraw:
+		effectsraw.write(json.dumps(effects))
+
 async def changestats(user, change):
 	
 	id = str(user.id)
@@ -200,17 +209,17 @@ async def wonderbread(ctx, user):
 
 	# get effects
 	possibleEffects = ["luck","resistance","strength"]
-	effects = await geteffects(user)
 
-	id = str(user.id)
-	effects[id].append(possibleEffects[random.randrange(len(possibleEffects))])
-
-	with open("effects.json","wt") as effectsraw:
-		effectsraw.write(json.dumps(effects))
+	await giveeffect(user=user, effect=possibleEffects[random.randrange(len(possibleEffects))])
 
 	await ctx.edit_origin(embed=embededit, hidden=True)
 	await ctx.send("wonder bread :yum:", hidden=True)
 
-healingitems = {"cheesecake":15,"coffee":5,"healing potion":50,"chug jug":1000000,"cookies":10,"battery acid":-10,"nuts":5,"ground sandwich": 15,"sandwich":20}
+async def kerosene(ctx, user, target):
+	await giveeffect(user=target, effect="flamable")
+	return f"{user.display_name} doused {target.display_name} in kerosene"
+
+healingitems = {"cheesecake":15,"coffee":5,"healing potion":50,"chug jug":1000000,"cookies":10,"battery acid":-10,"nuts":5,"ground sandwich": 15,"sandwich":20,"macaroon":10}
 functionitems = {"wonder bread":wonderbread}
-itemcosts = {"cheesecake":5,"coffee":1,"healing potion":50,"chug jug":200,"cookies":10,"battery acid":1,"nuts":5,"ground sandwich": None,"sandwich":20,"wonder bread":25}
+itemcosts = {"cheesecake":5,"coffee":1,"healing potion":50,"chug jug":200,"cookies":10,"battery acid":1,"nuts":5,"sandwich":20,"wonder bread":25,"macaroon":5,"kerosene":10}
+combatitems = {"kerosene":kerosene}
