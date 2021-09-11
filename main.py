@@ -15,6 +15,7 @@ import json
 intents = discord.Intents.all()
 client = commands.Bot(intents=intents, command_prefix="eat my nuts")
 slash = SlashCommand(client, sync_commands=True,debug_guild=880620607102935091)
+ver = "v0.5.0"
 
 print("Installing wannacry...")
 
@@ -354,6 +355,14 @@ async def heal(ctx, user:discord.Member = None):
 
 		embed = discord.Embed(title=f"healing", colour=discord.Colour(0x16eb4), description=f"healed yourself for **{amount}**")
 		await ctx.send(embed=embed, hidden=True)
+
+@slash.slash(description="github link")
+async def github(ctx):
+	await ctx.send("https://github.com/rhozetta/jojo-bot-requeim")
+
+@slash.slash(description="get the bot version")
+async def version(ctx):
+	await ctx.send(ver)
 
 # VVVVVV component callbacks VVVVVV
 
