@@ -203,7 +203,7 @@ async def wonderbread(user):
 	await changestats(user, change)
 
 	# get effects
-	possibleEffects = ["luck"]
+	possibleEffects = ["luck","resistance","strength"]
 	effects = await geteffects(user)
 
 	id = str(user.id)

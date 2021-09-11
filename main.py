@@ -42,7 +42,16 @@ async def stats(ctx):
 
 	stats = await getstats(ctx.author)	
 
-	embed = discord.Embed(title=f"stats for {ctx.author.display_name}", colour=discord.Colour(0x16eb4), description=f"health: **{stats['hp']}/{stats['max hp']}**\ndefense: **{stats['dp']}**\nattack: **{stats['ap']}**\nstand: **{stats['stand']}**\nmoney: **{stats['money']}**")
+	description = ""
+	for x in stats:
+		if x == "hp":
+			description += f"health: **{stats['hp']}/{stats['max hp']}**\n"
+			continue
+		if x == "max hp":
+			continue
+		description += f"{x}: **{stats[x]}**\n"
+
+	embed = discord.Embed(title=f"stats for {ctx.author.display_name}", colour=discord.Colour(0x16eb4), description=description)
 	
 	await ctx.send(embed=embed, hidden=True)
 
@@ -69,10 +78,15 @@ async def give(ctx, user:discord.Member, item):
 	embedfail = discord.Embed(title=f"give", colour=discord.Colour(0x16eb4), description=f"you need to ping someone")
 	embedsuccess = discord.Embed(title=f"give", colour=discord.Colour(0x16eb4), description=f"you gave {user.display_name} {item}")
 	
-	if await addtoinv(ctx, user, item):
+	if await addtoinv(user, item):
 		await ctx.send(embed=embedsuccess, hidden=True)
 	else:
 		await ctx.send(embed=embedfail, hidden=True)
+
+@slash.slash(default_permission=False, permissions={880620607102935091: [create_permission(880620607371345982, SlashCommandPermissionType.ROLE, True)]})
+async def echo(ctx, message):
+	await ctx.send("i said it!", hidden=True)
+	await ctx.channel.send(message)
 
 @slash.slash(description="view your inventory")
 async def inventory(ctx):
@@ -120,7 +134,10 @@ async def search(ctx):
 	# look for luck effect
 	with open("effects.json","r") as effectsraw:
 		effects = json.loads(effectsraw.read())
-		effects = effects[str(ctx.author.id)]
+		try:
+			effects = effects[str(ctx.author.id)]
+		except KeyError:
+			effects = []
 
 	if "luck" in effects:
 		chance = random.randrange(30, 100)
@@ -216,7 +233,7 @@ async def search(ctx):
 
 			await givehamon(user=ctx.author, hamontype=hamontype)
 	elif chance in range(30, 60):
-		await addtoinv(user=ctx.author.id,item="ground sandwich")
+		await addtoinv(user=ctx.author,item="ground sandwich")
 		embed = discord.Embed(title=f"searching", colour=discord.Color(0x16eb4), description=f"you found a sandwich on the ground")
 		await ctx.send(embed=embed, hidden=True)	
 	else:
