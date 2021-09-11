@@ -134,10 +134,8 @@ async def search(ctx):
 	# look for luck effect
 	with open("effects.json","r") as effectsraw:
 		alleffects = json.loads(effectsraw.read())
-		print(alleffects)
 		try:
 			effects = alleffects[str(ctx.author.id)]
-			print(effects)
 		except KeyError:
 			effects = []
 
@@ -145,7 +143,6 @@ async def search(ctx):
 		chance = random.randrange(30, 100)
 		for x in range(len(effects)):
 			if effects[x] == "luck":
-				print("found the effect")
 				effects.pop(x)
 				break
 	else:
@@ -371,6 +368,9 @@ async def heal(ctx, user:discord.Member = None):
 		embed = discord.Embed(title=f"healing", colour=discord.Colour(0x16eb4), description=f"healed yourself for **{amount}**")
 		await ctx.send(embed=embed, hidden=True)
 
+
+
+
 @slash.component_callback(components=["shop"])
 async def shopcallback(ctx):
 	item = ctx.selected_options[0]
@@ -392,5 +392,8 @@ async def shopcallback(ctx):
 		embed = discord.Embed(title=f"Dollar General", colour=discord.Colour(0x16eb4), description=f"sorry, but you are too poor for this")
 		await ctx.edit_origin(embed=embededit)
 		await ctx.send(embed=embed, hidden=True)
+
+@slash.component_callback(components=["use"])
+async def usecallback(ctx):
 
 client.run(token)
