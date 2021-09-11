@@ -109,7 +109,6 @@ async def shop(ctx):
 	items = []
 	for x in itemcosts:
 		items.append(x)
-	print(items)
 
 	inshop = []
 	for x in range(-1, random.randrange(len(items))):
@@ -288,7 +287,6 @@ async def heal(ctx, user:discord.Member = None):
 		user = ctx.author
 	else:
 		stats = await getstats(user)
-		print(stats)
 
 	if authorstats["hamon type"] == None:
 		await ctx.send(embed=discord.Embed(title=f"healing", colour=discord.Colour(0x16eb4), description=f"you dont know hamon!"), hidden=True)

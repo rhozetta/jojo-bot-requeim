@@ -71,7 +71,6 @@ async def changestats(user, change):
 			rawstats.write(json.dumps(stats))
 
 	except KeyError:
-		print("\n\n\n")
 		await makestats(user)
 
 		with open("stats.json") as rawstats:
@@ -156,9 +155,7 @@ async def removefrominv(user, item):
 
 		done = False
 		for x in range(0, len(userinv)):
-			print(x)
 			if userinv[x] == item:
-				print(userinv[x])
 				userinv.pop(x)
 				done = True
 				break
