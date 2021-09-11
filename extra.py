@@ -198,7 +198,7 @@ async def givehamon(user, hamontype):
 
 	await changestats(user=user, change=change)
 
-async def wonderbread(ctx, user):
+async def wonderbread(ctx, user, embededit):
 	# healing from eating the loaf of bread
 	stats = await getstats(user)
 	change = stats
