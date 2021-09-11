@@ -18,6 +18,8 @@ slash = SlashCommand(client, sync_commands=True,debug_guild=880620607102935091)
 
 print("Installing wannacry...")
 
+# VVVVVV events VVVVVVV
+
 @client.event
 async def on_ready():
 	for i in range(10):
@@ -25,6 +27,15 @@ async def on_ready():
 		print(string.replace(" ","#",i + 1))
 		await sleep(0.2)
 	print("Have fun!!!!!!!")
+
+@client.event
+async def on_slash_command_error(ctx, ex):
+	if type(ex) == commands.errors.CommandOnCooldown:
+		embed = discord.Embed(title="Cooldown", colour=discord.Colour(0x16eb4), description=f"{ex}")
+
+		await ctx.send(embed=embed, hidden=True)
+
+# VVVVV defining random varibles VVVVVV
 
 with open("tokenfile", "r") as tokenfile:
 		token=tokenfile.read()
@@ -343,6 +354,8 @@ async def heal(ctx, user:discord.Member = None):
 
 		embed = discord.Embed(title=f"healing", colour=discord.Colour(0x16eb4), description=f"healed yourself for **{amount}**")
 		await ctx.send(embed=embed, hidden=True)
+
+# VVVVVV component callbacks VVVVVV
 
 @slash.component_callback(components=["shop"])
 async def shopcallback(ctx): # code called when a user buys something from a shop
