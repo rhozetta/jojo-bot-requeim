@@ -393,6 +393,7 @@ async def usecallback(ctx): # code called when a user uses an item
 	embedusless = discord.Embed(title=f"use item", colour=discord.Colour(0x16eb4), description=f"{item} doesnt have a use")
 
 	used = False
+	used = False
 
 	if item in healingitems:
 
@@ -407,20 +408,38 @@ async def usecallback(ctx): # code called when a user uses an item
 
 		await changestats(user=ctx.author, change=change) # submit the changes to the file
 
-		embedused = discord.Embed(title=f"use item", colour=discord.Colour(0x16eb4), description=f"you used {item} and healed for {amount}")
-		await ctx.edit_origin(embed=embededit, hidden=True) # edit so the select is reset
-		await ctx.send(embed=embedused, hidden=True)
-
 		await removefrominv(user=ctx.author, item=item)
+		embedused = discord.Embed(title=f"use item", colour=discord.Colour(0x16eb4), description=f"you used {item} and healed for {amount}")
+
 		used = True
+		send = True
 	if item in functionitems:
 		itemfunc = functionitems[item]
-		await itemfunc(ctx=ctx,user=ctx.author,embededit=embededit)
+		await itemfunc(ctx=ctx,user=ctx.author)
 
 		await removefrominv(user=ctx.author, item=item)
 		used = True
+		send = False
 	if not used:
-		await ctx.edit_origin(embed=embededit, hidden=True) # edit so the select is reset
 		await ctx.send(embed=embedusless, hidden=True)
+
+	inv = await getinv(ctx.author)
+
+	options = []
+	for x in inv:
+		amount = 0
+		for y in inv:
+			if y == x: # adds to the amount of that item in the inv
+				amount += 1
+		if create_select_option(f"{x} - {amount}", value=x) in options: # dont add the item if it is already in there
+			continue
+		options.append(create_select_option(f"{x} - {amount}", value=x)) # add the option to the list of options
+	select = create_select(options, placeholder="choose and item", min_values=1,custom_id="use")
+	selectionrow = create_actionrow(select)
+
+	await ctx.edit_origin(embed=embededit, components=[selectionrow], hidden=True) # edit so the select is reset
+
+	if used and send:
+		await ctx.send(embed=embedused, hidden=True)
 
 client.run(token)

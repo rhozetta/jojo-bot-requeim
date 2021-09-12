@@ -195,7 +195,7 @@ async def givehamon(user, hamontype):
 
 	await changestats(user=user, change=change)
 
-async def wonderbread(ctx, user, embededit):
+async def wonderbread(ctx, user):
 	# healing from eating the loaf of bread
 	stats = await getstats(user)
 	change = stats
@@ -208,7 +208,6 @@ async def wonderbread(ctx, user, embededit):
 
 	await giveeffect(user=user, effect=possibleEffects[random.randrange(len(possibleEffects))])
 
-	await ctx.edit_origin(embed=embededit, hidden=True) # edit origin so the "use" select resets
 	await ctx.send("wonder bread :yum:", hidden=True)
 
 async def kerosene(ctx, user, target):
