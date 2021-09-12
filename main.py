@@ -32,9 +32,15 @@ async def on_ready():
 @client.event
 async def on_slash_command_error(ctx, ex):
 	if type(ex) == commands.errors.CommandOnCooldown:
-		embed = discord.Embed(title="Cooldown", colour=discord.Colour(0x16eb4), description=f"{ex}")
+		if ctx.data["name"] == "shop":
+			with open("shop.json", "r") as shopfile:
+				shop = json.loads(shopfile.read())
 
-		await ctx.send(embed=embed, hidden=True)
+			embed = discord.Embed(title=f"Dollar General", colour=discord.Colour(0x16eb4), description=f"come check out the random junk we have in stock today")
+			await ctx.send(embed=embed, components=[shop])
+		else:
+			embed = discord.Embed(title="Cooldown", colour=discord.Colour(0x16eb4), description=f"{ex}")
+			await ctx.send(embed=embed, hidden=True)
 
 # VVVVV defining random varibles VVVVVV
 
@@ -145,6 +151,9 @@ async def shop(ctx):
 		options.append(create_select_option(label=label, value=x))
 	select = create_select(options=options, placeholder="come check out our wares!",min_values=1,custom_id="shop")
 	selectionrow = create_actionrow(select)
+
+	with open("shop.json", "wt") as shopfile:
+		shopfile.write(json.dumps(selectionrow))
 
 	embed = discord.Embed(title=f"Dollar General", colour=discord.Colour(0x16eb4), description=f"come check out the random junk we have in stock today")
 	await ctx.send(embed=embed, components=[selectionrow])
