@@ -90,7 +90,10 @@ async def checkmoney(user, check):
 	with open("stats.json") as rawstats: # reads the file
 		stats = json.loads(rawstats.read())
 
-	money = stats[str(user.id)]['money'] # gets the user's money
+	try:
+		money = stats[str(user.id)]['money'] # gets the user's money
+	except KeyError:
+		await makestats(user)
 
 	if money >= check:
 		return True
