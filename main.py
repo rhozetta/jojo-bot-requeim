@@ -377,6 +377,14 @@ async def version(ctx):
 
 @slash.component_callback(components=["shop"])
 async def shopcallback(ctx): # code called when a user buys something from a shop
+	with open("shop.json") as shopfile:
+		shop = json.loads(shopfile.read())
+
+	if shop != ctx.origin_message.components:
+		embed = discord.Embed(title=f"Dollar General", colour=discord.Colour(0x16eb4), description=f"that is no longer in our stock, sorry")
+		await ctx.send(embed=embed, hidden=True)
+		return
+
 	item = ctx.selected_options[0]
 	cost = itemcosts[item]
 
