@@ -56,6 +56,10 @@ action_row2 = create_actionrow(*buttons2)
 # VVVVVV commands VVVVVV'
 
 @slash.slash()
+async def invite(ctx):
+	await ctx.send("https://discord.gg/HpAdmfmwG7", hidden=True)
+
+@slash.slash()
 async def economy(ctx, user:discord.Member, amount:int):
 	await changemoney(user=user, mod=amount)
 
