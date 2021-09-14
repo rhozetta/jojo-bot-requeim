@@ -381,9 +381,6 @@ async def shopcallback(ctx): # code called when a user buys something from a sho
 		shop = json.loads(shopfile.read())
 
 	if shop != ctx.origin_message.components[0]:
-		print(shop)
-		print()
-		print(ctx.origin_message.components[0])
 		embed = discord.Embed(title=f"Dollar General", colour=discord.Colour(0x16eb4), description=f"that is no longer in our stock, sorry")
 		await ctx.send(embed=embed, hidden=True)
 		return
