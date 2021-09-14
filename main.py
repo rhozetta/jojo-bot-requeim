@@ -56,6 +56,18 @@ action_row2 = create_actionrow(*buttons2)
 # VVVVVV commands VVVVVV'
 
 @slash.slash()
+async def economy(ctx, user:discord.Member, amount:int):
+	await changemoney(user=user, mod=amount)
+
+	if amount > 0:
+		embed = discord.Embed(title=f"Economy", colour=discord.Colour(0x16eb4), description=f"gave {user.display_name} ${amount}")
+	elif amount < 0:
+		embed = discord.Embed(title=f"Economy", colour=discord.Colour(0x16eb4), description=f"took ${amount * -1} from {user.display_name}")
+	elif amount == 0:
+		embed = discord.Embed(title=f"Economy", colour=discord.Colour(0x16eb4), description=f"nothing happened!")
+	await ctx.send(embed=embed, hidden=True)
+
+@slash.slash()
 async def stats(ctx):
 
 	stats = await getstats(ctx.author)	
