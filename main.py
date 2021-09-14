@@ -152,11 +152,11 @@ async def shop(ctx):
 	select = create_select(options=options, placeholder="come check out our wares!",min_values=1,custom_id="shop")
 	selectionrow = create_actionrow(select)
 
-	with open("shop.json", "wt") as shopfile:
-		shopfile.write(json.dumps(selectionrow))
-
 	embed = discord.Embed(title=f"Dollar General", colour=discord.Colour(0x16eb4), description=f"come check out the random junk we have in stock today")
-	await ctx.send(embed=embed, components=[selectionrow])
+	message = await ctx.send(embed=embed, components=[selectionrow])
+
+	with open("shop.json", "wt") as shopfile:
+		shopfile.write(json.dumps(message.components[0]))
 
 @slash.slash(name="search", description="look for someone that is selling stand arrows (cant do that rn) or teaching hamon (good luck)", permissions={880620607102935091: [create_permission(884220480465305600, SlashCommandPermissionType.ROLE, False)]})
 @commands.cooldown(rate=1,per=86400,type=commands.BucketType.user)
@@ -380,7 +380,10 @@ async def shopcallback(ctx): # code called when a user buys something from a sho
 	with open("shop.json") as shopfile:
 		shop = json.loads(shopfile.read())
 
-	if shop != ctx.origin_message.components:
+	if shop != ctx.origin_message.components[0]:
+		print(shop)
+		print()
+		print(ctx.origin_message.components[0])
 		embed = discord.Embed(title=f"Dollar General", colour=discord.Colour(0x16eb4), description=f"that is no longer in our stock, sorry")
 		await ctx.send(embed=embed, hidden=True)
 		return
