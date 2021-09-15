@@ -187,12 +187,12 @@ async def search(ctx):
 		embedpurchase = discord.Embed(title=f"searching", colour=discord.Colour(0x16eb4), description=f"you bought an arrow for {cost}!")
 		embedpoor = discord.Embed(title=f"searching", colour=discord.Colour(0x16eb4), description=f"you do not have sufficient funds")
 
-		await ctx.send(embed=embed, components=[action_row1])	
+		await ctx.send(embed=embed, components=[action_row2])	
 
 		bought = False
 		while not bought: # a loop because someone could press the button if they are too poor
 
-			button_ctx: ComponentContext = await wait_for_component(client, components=action_row1)
+			button_ctx: ComponentContext = await wait_for_component(client, components=action_row2)
 
 			embedsteal = discord.Embed(title=f"searching", colour=discord.Colour(0x16eb4), description=f"{button_ctx.author.display_name} took the offer before you!")
 
@@ -236,7 +236,7 @@ async def search(ctx):
 
 			button_ctx: ComponentContext = await wait_for_component(client, components=action_row2)
 			
-			if await checkmoney(user=button_ctx.author,amount=cost): # checks if the user is a rich bastard
+			if await checkmoney(user=button_ctx.author,check=cost): # checks if the user is a rich bastard
 				await button_ctx.send(embed=embedlearning, hidden=True)
 				await givehamon(user=ctx.author, hamontype=hamontype)
 				await changemoney(user=ctx.author, mod= -cost)
