@@ -8,18 +8,23 @@ from discord_slash.utils.manage_commands import create_permission
 from discord_slash.model import ButtonStyle, SlashCommandPermissionType
 
 from extra import makestats, addtoinv, changestats, checkmoney, changemoney, getinv, getstats, removefrominv, givehamon, healingitems, functionitems, itemcosts, combatitems
+import hamon
+import admin
 
 import random
 import json
 
 intents = discord.Intents.all()
 client = commands.Bot(intents=intents, command_prefix="eat my nuts")
-slash = SlashCommand(client, sync_commands=True,debug_guild=880620607102935091)
+slash = SlashCommand(client, sync_commands=True,debug_guild=880620607102935091,sync_on_cog_reload = True)
 ver = "v0.6.0"
 
 print("Installing wannacry...")
 
 # VVVVVV events VVVVVVV
+
+client.add_cog(hamon.Hamon(client))
+client.add_cog(admin.Admin(client))
 
 @client.event
 async def on_ready():
@@ -60,18 +65,6 @@ async def invite(ctx):
 	await ctx.send("https://discord.gg/HpAdmfmwG7", hidden=True)
 
 @slash.slash()
-async def economy(ctx, user:discord.Member, amount:int):
-	await changemoney(user=user, mod=amount)
-
-	if amount > 0:
-		embed = discord.Embed(title=f"Economy", colour=discord.Colour(0x16eb4), description=f"gave {user.display_name} ${amount}")
-	elif amount < 0:
-		embed = discord.Embed(title=f"Economy", colour=discord.Colour(0x16eb4), description=f"took ${amount * -1} from {user.display_name}")
-	elif amount == 0:
-		embed = discord.Embed(title=f"Economy", colour=discord.Colour(0x16eb4), description=f"nothing happened!")
-	await ctx.send(embed=embed, hidden=True)
-
-@slash.slash()
 async def stats(ctx):
 
 	stats = await getstats(ctx.author)	
@@ -105,22 +98,6 @@ async def job(ctx):
 		await changemoney(user=ctx.author, mod=amount)
 
 	await ctx.send(embed=embed, hidden=True)
-
-@slash.slash(default_permission=False, permissions={880620607102935091: [create_permission(880620607371345982, SlashCommandPermissionType.ROLE, True)]})
-async def give(ctx, user:discord.Member, item):
-
-	embedfail = discord.Embed(title=f"give", colour=discord.Colour(0x16eb4), description=f"something went wrong")
-	embedsuccess = discord.Embed(title=f"give", colour=discord.Colour(0x16eb4), description=f"you gave {user.display_name} {item}")
-	
-	if await addtoinv(user, item):
-		await ctx.send(embed=embedsuccess, hidden=True)
-	else:
-		await ctx.send(embed=embedfail, hidden=True)
-
-@slash.slash(default_permission=False, permissions={880620607102935091: [create_permission(880620607371345982, SlashCommandPermissionType.ROLE, True)]})
-async def echo(ctx, message):
-	await ctx.send("i said it!", hidden=True)
-	await ctx.channel.send(message)
 
 @slash.slash(description="view your inventory")
 async def inventory(ctx):
@@ -322,64 +299,6 @@ async def use(ctx):
 		select = create_select(options, placeholder="choose and item", min_values=1,custom_id="use")
 		selectionrow = create_actionrow(select)
 		await ctx.send(embed=embed, components=[selectionrow], hidden=True)
-
-@slash.slash(description="hamon heal", permissions={880620607102935091: [create_permission(884220480465305600, SlashCommandPermissionType.ROLE, False)]})
-@commands.cooldown(rate=1,per=3600,type=commands.BucketType.user)
-async def heal(ctx, user:discord.Member = None):
-
-	authorstats = await getstats(ctx.author)
-
-	if user is None:
-		stats = await getstats(ctx.author)
-		user = ctx.author
-	else:
-		stats = await getstats(user)
-
-	if authorstats["hamon type"] == None:
-		await ctx.send(embed=discord.Embed(title=f"healing", colour=discord.Colour(0x16eb4), description=f"you dont know hamon!"), hidden=True)
-		return
-
-	if authorstats["hamon type"] != "healing" and ctx.author != user:
-		await ctx.send(embed=discord.Embed(title=f"healing", colour=discord.Colour(0x16eb4), description=f"you dont know the right type of hamon to heal someone else"), hidden=True)
-	elif authorstats["hamon level"] < 2 and ctx.author != user:
-		await ctx.send(embed=discord.Embed(title=f"healing", colour=discord.Colour(0x16eb4), description=f"you arent a high enough level to heal someone else"), hidden=True)
-	elif authorstats["hamon level"] >= 2 and ctx.author != user:
-		change = stats
-
-		amountmin = stats["hamon level"] * 3
-		amountmax = stats["hamon level"] * 6
-		amount = random.randrange(amountmin, amountmax)
-
-		change["hp"] += amount
-
-		if change["hp"] > stats["max hp"]:
-			change["hp"] = stats["max hp"]
-
-		await changestats(ctx, user, change)
-
-		embed = discord.Embed(title=f"healing", colour=discord.Colour(0x16eb4), description=f"healed **{user.display_name}** for **{amount}**")
-		await ctx.send(embed=embed, hidden=True)
-	elif ctx.author == user:
-		change = stats
-
-		if stats["hamon type"] == "healing":
-			amountmin = stats["hamon level"] * 3 + stats["hamon level"] * 2
-			amountmax = stats["hamon level"] * 6 + stats["hamon level"] * 3
-		else:
-			amountmin = stats["hamon level"] * 3
-			amountmax = stats["hamon level"] * 6 
-		
-		amount = random.randrange(amountmin, amountmax)
-
-		change["hp"] += amount
-
-		if change["hp"] > stats["max hp"]:
-			change["hp"] = stats["max hp"]
-
-		await changestats(user=ctx.author, change=change)
-
-		embed = discord.Embed(title=f"healing", colour=discord.Colour(0x16eb4), description=f"healed yourself for **{amount}**")
-		await ctx.send(embed=embed, hidden=True)
 
 @slash.slash(description="github link")
 async def github(ctx):
