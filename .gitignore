@@ -1,6 +1,4 @@
 tokenfile
-stats.json
-inv.json
-effects.json
+info.json
 __pycache__
 shop.json

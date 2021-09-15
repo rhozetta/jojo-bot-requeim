@@ -34,7 +34,7 @@ async def on_ready():
 		await sleep(0.2)
 	print("Have fun!!!!!!!")
 
-@client.event
+#@client.event
 async def on_slash_command_error(ctx, ex):
 	if type(ex) == commands.errors.CommandOnCooldown:
 		if ctx.data["name"] == "shop":
@@ -46,6 +46,8 @@ async def on_slash_command_error(ctx, ex):
 		else:
 			embed = discord.Embed(title="Cooldown", colour=discord.Colour(0x16eb4), description=f"{ex}")
 			await ctx.send(embed=embed, hidden=True)
+	else:
+		print(ex)
 
 # VVVVV defining random varibles VVVVVV
 
@@ -67,7 +69,7 @@ async def invite(ctx):
 @slash.slash()
 async def stats(ctx):
 
-	stats = await getstats(ctx.author)	
+	stats = await getstats(ctx.author)
 
 	description = ""
 	for x in stats:
@@ -155,10 +157,10 @@ async def shop(ctx):
 @commands.cooldown(rate=1,per=86400,type=commands.BucketType.user)
 async def search(ctx):
 	# look for luck effect
-	with open("effects.json","r") as effectsraw:
-		alleffects = json.loads(effectsraw.read())
+	with open("info.json","r") as inforaw:
+		allinfo = json.loads(inforaw.read())
 		try:
-			effects = alleffects[str(ctx.author.id)]
+			effects = allinfo[str(ctx.author.id)]["effects"]
 		except KeyError:
 			effects = []
 
@@ -168,12 +170,11 @@ async def search(ctx):
 			if effects[x] == "luck": 
 				effects.pop(x) # remove the luck effect
 				break
+		with open("info.json","wt") as inforaw: # save changes to the effects list
+			allinfo[str(ctx.author.id)]["effects"] = effects
+			inforaw.write(json.dumps(allinfo))
 	else:
 		chance = random.randrange(1, 100)
-
-	with open("effects.json","wt") as effectsraw: # save changes to the effects list
-		alleffects[str(ctx.author.id)] = effects
-		effectsraw.write(json.dumps(alleffects))
 
 	if chance in range(81, 90): # found an arrow seller
 		

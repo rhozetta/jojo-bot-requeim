@@ -8,11 +8,12 @@ async def makestats(user):
 
 	id = str(user.id)
 
-	with open("stats.json") as rawstats: # read the file
-		stats = json.loads(rawstats.read())
+	with open("info.json") as rawinfo: # read the file
+		info = json.loads(rawinfo.read())
 
-	stats[id] = {} # makes an empty dict
-	userstats = stats[id] # makes userstats the same as the empty dict
+	info[id] = {}
+	info[id]["stats"] = {} # makes an empty dict
+	userstats = info[id]["stats"] # makes userstats the same as the empty dict
 
 	userstats["max hp"] = 50 
 	userstats["hp"] = 50
@@ -23,103 +24,95 @@ async def makestats(user):
 	userstats["hamon level"] = None
 	userstats["hamon type"] = None
 
-	stats[id] = userstats # makes the empty dict the same as the user stats
+	info[id]["stats"] = userstats # makes the empty dict the same as the user stats
 
-	with open("stats.json", "wt") as rawstats: # write to the file
-		rawstats.write(json.dumps(stats))
+	with open("info.json", "wt") as rawinfo: # write to the file
+		rawinfo.write(json.dumps(info))
 
 async def addtoinv(user, item):
 
 	id = str(user.id)
 
-	with open("inv.json") as rawinv: # read the file
-		inv = json.loads(rawinv.read())
+	with open("info.json") as rawinfo: # read the file
+		info = json.loads(rawinfo.read())
 	
 	try:
-		userinv = inv[id] # sets the userinv to the user's inv
+		userinv = info[id]["inv"] # sets the userinv to the user's inv
 		userinv.append(item) # adds item to the inventory
 
-		inv[id] = userinv # adds the userinv to the list of all inventories 
+		info[id]["inv"] = userinv # adds the userinv to the list of all inventories 
 
 	except KeyError: # does the same thing but a few changes to add it to the full dict
 		userinv = []
 		userinv.append(item)
 
-		inv[id] = userinv
+		info[id] = {}
+		info[id]["inv"] = userinv
 	
-	with open("inv.json","wt") as invfile: 
-		invfile.write(json.dumps(inv))
+	with open("info.json","wt") as rawinfo: 
+		rawinfo.write(json.dumps(info))
 
 	return True
 
 async def giveeffect(user, effect):
-	effects = await geteffects(user) # get the full list of effects
+	with open("info.json","r") as rawinfo:
+		info = json.loads(rawinfo.read()) # get the full list of effects
 	id = str(user.id)
 
-	effects[id].append(effect) # adds the effect
+	try:
+		info[id]['effects'].append(effect) # adds the effect
+	except KeyError:
+		info[id]['effects'] = []
+		info[id]['effects'].append(effect) # adds the effect
 
-	with open("effects.json","wt") as effectsraw:
-		effectsraw.write(json.dumps(effects)) # writes to the file
+	with open("info.json","wt") as inforaw:
+		inforaw.write(json.dumps(info)) # writes to the file
 
 async def changestats(user, change):
 	
 	id = str(user.id)
 
 	try:
-		with open("stats.json") as rawstats: # reads the file
-			stats = json.loads(rawstats.read())
+		with open("info.json") as rawinfo: # reads the file
+			info = json.loads(rawinfo.read())
 
-		stats[id] = change # sets the stats to the passed change
+		info[id]['stats'] = change # sets the stats to the passed change
 
-		with open("stats.json", "wt") as rawstats: # writes to file
-			rawstats.write(json.dumps(stats))
+		with open("info.json", "wt") as rawinfo: # writes to file
+			rawinfo.write(json.dumps(info))
 
 	except KeyError:
 		await makestats(user) # makes stats
 
-		with open("stats.json") as rawstats: # reads the file
-			stats = json.loads(rawstats.read())
+		with open("info.json") as rawinfo: # reads the file
+			info = json.loads(rawinfo.read())
 
-		stats[id] = change # sets the stats to the passed change
+		info[id]['stats'] = change # sets the stats to the passed change
 
 
-		with open("stats.json", "wt") as rawstats: # writes to file
-			rawstats.write(json.dumps(stats))
+		with open("info.json", "wt") as rawinfo: # writes to file
+			rawinfo.write(json.dumps(info))
 
 async def checkmoney(user, check):
-	with open("stats.json") as rawstats: # reads the file
-		stats = json.loads(rawstats.read())
-
-	try:
-		money = stats[str(user.id)]['money'] # gets the user's money
-	except KeyError:
-		await makestats(user)
-
-	if money >= check:
-		return True
-	elif money <= check:
-		return False
+	money = await getstats(user)['money']
+	return money >= check
 
 async def changemoney(user, mod):
-	with open("stats.json") as rawstats: # reads the file
-		stats = json.loads(rawstats.read())
+	with open("info.json") as rawinfo: # reads the file
+		info = json.loads(rawinfo.read())
 
-	money = stats[str(user.id)]['money'] # gets the users money
+	info[str(user.id)]['stats']['money'] += mod # set the money of the user
 
-	money += mod # adds the money
-
-	stats[str(user.id)]['money'] = money # sets the money in the full dict
-
-	statsfile = open("stats.json", "wt") # writes to the file
-	statsfile.write(json.dumps(stats))
-	statsfile.close()
+	rawinfo = open("info.json", "wt") # writes to the file
+	rawinfo.write(json.dumps(info))
+	rawinfo.close()
 
 async def getinv(user):
 	try:
-		with open("inv.json") as rawinv: # reads the file
-			inv = json.load(rawinv)
+		with open("info.json") as rawinfo: # reads the file
+			info = json.loads(rawinfo.read())
 		
-			inv = inv[str(user.id)]
+			inv = info[str(user.id)]["inv"]
 
 			return inv # returns inventory
 	except KeyError:
@@ -127,25 +120,25 @@ async def getinv(user):
 
 async def getstats(user):
 	try:
-		with open("stats.json") as rawstats: # reads the file
-			stats = json.loads(rawstats.read())
+		with open("info.json") as rawinfo: # reads the file
+			info = json.loads(rawinfo.read())
 		
-		stats = stats[str(user.id)] # get the stats
+		stats = info[str(user.id)]["stats"] # get the stats
 	except KeyError:
 		await makestats(user) # make stats for the user
 		
-		with open("stats.json") as rawstats: # read the file
-			stats = json.load(rawstats)
+		with open("info.json") as rawinfo: # read the file
+			info = json.load(rawinfo)
 
-		stats = stats[str(user.id)] # get the stats
+		stats = info[str(user.id)]["stats"] # get the stats
 
 	return stats
 
 async def geteffects(user):
-	with open("effects.json","r") as effectsraw: # reads the file
-		effects = json.loads(effectsraw.read())
+	with open("info.json","r") as rawinfo: # reads the file
+		info = json.loads(rawinfo.read())
 		try:
-			return effects[str(user.id)]
+			return info[str(user.id)]["effects"]
 		except KeyError:
 			return [] # returns nothing if no effects
 
@@ -153,11 +146,11 @@ async def removefrominv(user, item):
 
 	id = str(user.id)
 
-	with open("inv.json") as rawinv: # reads the file
-		inv = json.loads(rawinv.read())
+	with open("info.json") as rawinfo: # reads the file
+		info = json.loads(rawinfo.read())
 	
 	try:
-		userinv = inv[id]
+		userinv = info[id]["inv"]
 
 		done = False
 		for x in range(0, len(userinv)): # finds the item
@@ -167,11 +160,11 @@ async def removefrominv(user, item):
 				break
 		
 		if done:
-			inv[id] = userinv
+			info[id]["inv"] = userinv
 
-			invfile = open("inv.json", "wt") # writes to the file
-			invfile.write(json.dumps(inv))
-			invfile.close()
+			infofile = open("info.json", "wt") # writes to the file
+			infofile.write(json.dumps(info))
+			infofile.close()
 
 			return True
 	except KeyError:
