@@ -94,7 +94,8 @@ async def changestats(user, change):
 			rawinfo.write(json.dumps(info))
 
 async def checkmoney(user, check):
-	money = await getstats(user)['money']
+	stats = await getstats(user)
+	money = stats['money']
 	return money >= check
 
 async def changemoney(user, mod):

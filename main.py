@@ -1,5 +1,6 @@
 from operator import truediv
 from asyncio import sleep
+import time
 import discord
 from discord.ext import commands
 from discord_slash import SlashCommand, SlashContext
@@ -34,9 +35,11 @@ async def on_ready():
 		await sleep(0.2)
 	print("Have fun!!!!!!!")
 
-#@client.event
+@client.event
 async def on_slash_command_error(ctx, ex):
 	if type(ex) == commands.errors.CommandOnCooldown:
+		sinceepoch = time.time()
+		cooldownover = sinceepoch + ex.retry_after
 		if ctx.data["name"] == "shop":
 			with open("shop.json", "r") as shopfile:
 				shop = json.loads(shopfile.read())
@@ -44,7 +47,7 @@ async def on_slash_command_error(ctx, ex):
 			embed = discord.Embed(title=f"Dollar General", colour=discord.Colour(0x16eb4), description=f"come check out the random junk we have in stock today")
 			await ctx.send(embed=embed, components=[shop])
 		else:
-			embed = discord.Embed(title="Cooldown", colour=discord.Colour(0x16eb4), description=f"{ex}")
+			embed = discord.Embed(title="Cooldown", colour=discord.Colour(0x16eb4), description=f"cooldown is over <t:{int(cooldownover)}:R>")
 			await ctx.send(embed=embed, hidden=True)
 	else:
 		print(ex)
