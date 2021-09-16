@@ -20,8 +20,6 @@ client = commands.Bot(intents=intents, command_prefix="eat my nuts")
 slash = SlashCommand(client, sync_commands=True,debug_guild=880620607102935091,sync_on_cog_reload = True)
 ver = "v0.6.0"
 
-print("Installing wannacry...")
-
 # VVVVVV events VVVVVVV
 
 client.add_cog(hamon.Hamon(client))
@@ -29,11 +27,7 @@ client.add_cog(admin.Admin(client))
 
 @client.event
 async def on_ready():
-	for i in range(10):
-		string = "[          ]"
-		print(string.replace(" ","#",i + 1))
-		await sleep(0.2)
-	print("Have fun!!!!!!!")
+	print("hello world")
 
 @client.event
 async def on_slash_command_error(ctx, ex):
